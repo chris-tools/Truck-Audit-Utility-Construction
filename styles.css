@@ -197,12 +197,22 @@ button.primary {
   position: sticky;
   top: 0;
   z-index: 10000;
-  padding: 10px 12px;
+
+  padding: 12px 12px;
   text-align: center;
   font-weight: 900;
-  letter-spacing: 0.5px;
-  background: #ffc107;
+  letter-spacing: 0.6px;
+
+  background: repeating-linear-gradient(
+    45deg,
+    #ffc107,
+    #ffc107 12px,
+    #000 12px,
+    #000 24px
+  );
+
   color: #000;
-  border-bottom: 2px solid rgba(0,0,0,0.25);
+  border-bottom: 3px solid #000;
 }
+
 /* ===== TAU CONSTRUCTION BANNER : END ===== */
