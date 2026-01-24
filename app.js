@@ -676,11 +676,17 @@ document.addEventListener('visibilitychange', ()=>{
   if(document.hidden) stopCamera();
 });
 
-  if('serviceWorker' in navigator){
-    window.addEventListener('load', ()=>{
-      navigator.serviceWorker.register('sw.js').catch(()=>{});
+ // Service worker: ON for production, OFF for construction/testing
+if ('serviceWorker' in navigator) {
+  const isConstruction = location.hostname === 'chris-tools.github.io'
+    && location.pathname.startsWith('/Truck-Audit-Utility-Construction/');
+
+  if (!isConstruction) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
     });
   }
+}
 
   setBanner('ok', 'Choose a mode to begin');
   updateUI();
