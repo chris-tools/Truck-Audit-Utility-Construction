@@ -676,12 +676,38 @@ document.addEventListener('visibilitychange', ()=>{
   if(document.hidden) stopCamera();
 });
 
- // Service worker: ON for production, OFF for construction/testing
+// ===== Construction site: prevent service worker caching (SAFE) =====
 if ('serviceWorker' in navigator) {
-  const isConstruction = location.hostname === 'chris-tools.github.io'
-    && location.pathname.startsWith('/Truck-Audit-Utility-Construction/');
+  const isConstruction =
+    location.hostname === 'chris-tools.github.io' &&
+    location.pathname.startsWith('/Truck-Audit-Utility-Construction/');
 
-  if (!isConstruction) {
+  if (isConstruction) {
+    // Only remove SW registrations that belong to the Construction site
+    window.addEventListener('load', async () => {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) {
+          const scope = reg.scope || '';
+          const scriptURL =
+            (reg.active && reg.active.scriptURL) ||
+            (reg.waiting && reg.waiting.scriptURL) ||
+            (reg.installing && reg.installing.scriptURL) ||
+            '';
+
+          const belongsToConstruction =
+            scope.includes('/Truck-Audit-Utility-Construction/') ||
+            scriptURL.includes('/Truck-Audit-Utility-Construction/');
+
+          if (belongsToConstruction) {
+            await reg.unregister();
+          }
+        }
+      } catch (e) {}
+    });
+
+  } else {
+    // Production: keep SW enabled
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     });
