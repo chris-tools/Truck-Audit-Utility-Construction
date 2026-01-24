@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Truck Audit Utility</title>
+  <meta name="theme-color" content="#0b2a6f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      
+      <img id="brandLogo" src="Smiley.jpg?v=1" alt="Truck Audit Utility icon" />
+      <div class="titles">
+        
+        <div class="appname">Truck Audit Utility</div>
+        <div class="subtitle">Scan serials • Compare to inventory • Copy missing</div>
+      </div>
+    </div>
+    <button id="installBtn" class="ghost" hidden>Add to Home Screen</button>
+  </header>
+
+  <main class="container">
+    
+  <section class="card">
+    <details class="howto">
+      <summary><strong>How to Audit</strong> (tap to expand)</summary>
+
+    <div class="howto-body">
+      <h3>Truck Audit Instructions</h3>
+      <ol>
+        <li>
+  Tap <strong>Truck Audit (Excel)</strong> or <strong>Quick Scan</strong>.
+  <em>(If you choose Quick Scan, skip to step 3.)</em>
+</li>
+
+        <li>
+          Tap <strong>Select Excel File</strong>, then choose the file provided by the warehouse employee.
+          You’ll see <strong>“Loaded sheet”</strong> with the number of serials expected.
+        </li>
+
+        <li>
+          Tap the blue <strong>Scan</strong> button and begin scanning items on the truck.
+          <ul>
+            <li>Scan the serial number barcode or QR code on the item or box.</li>
+            <li>Each serial is saved once — duplicates are ignored.</li>
+          </ul>
+        </li>
+
+        <li>
+          Finish scanning when all deployable items have been scanned.
+          <ul>
+            <li>Missing items = Inventory list minus scanned items.</li>
+            <li>Extra items are shown for reference only.</li>
+          </ul>
+        </li>
+
+        <li>
+          <strong>Copy Next Missing</strong> puts the next missing serial on your clipboard so you can paste it into the correction form.
+        </li>
+      </ol>
+        </div>
+  </details>
+</section>
+
+<section class="card">
+  <h2>1) Choose a mode</h2>
+
+      <div class="modeRow">
+        <button id="modeAuditBtn" class="primary">Truck Audit (Upload Excel)</button>
+        <button id="modeQuickBtn" class="secondary">Quick Scan (No Excel)</button>
+      </div>
+      <p class="hint">Works offline <em>after</em> the first load. For best results, keep the correction form open in another tab.</p>
+    </section>
+
+    <section id="auditSection" class="card" hidden>
+      <h2>2) Upload inventory Excel</h2>
+      <div class="row">
+        <label class="fileLabel">
+          <input id="excelFile" type="file" accept=".xlsx,.xls" />
+          <span>Select Excel file</span>
+        </label>
+        <div id="fileMeta" class="meta"></div>
+      </div>
+      <div id="colPicker" class="row" hidden>
+        <div class="field">
+          <label>Serial column</label>
+          <select id="serialCol"></select>
+        </div>
+        <div class="field">
+          <label>Part column (optional)</label>
+          <select id="partCol"></select>
+        </div>
+      </div>
+      <div id="expectedSummary" class="meta"></div>
+    </section>
+
+    <section id="scanSection" class="card" hidden>
+      <h2>3) Scan</h2>
+
+      <div class="statusGrid">
+        <div class="stat"><div class="k">Expected</div><div id="statExpected" class="v">0</div></div>
+        <div class="stat"><div class="k">Matched</div><div id="statMatched" class="v">0</div></div>
+        <div class="stat"><div class="k">Missing</div><div id="statMissing" class="v">0</div></div>
+        <div class="stat"><div class="k">Extra</div><div id="statExtra" class="v">0</div></div>
+        <div class="stat"><div class="k">Duplicates</div><div id="statDup" class="v">0</div></div>
+      </div>
+
+      <div id="banner" class="banner" hidden></div>
+
+      <div class="videoWrap">
+        <video id="video" muted playsinline></video>
+        <div class="scanGuide" aria-hidden="true"></div>
+      </div>
+
+      <!-- Controls live *below* the camera, so the preview stays the focus -->
+    <div class="row scanControls">
+  <button id="startScan" class="primary bigAction">Scan</button>
+  <button id="flashBtn" class="ghost lightBtn" disabled>Flashlight</button>
+  <button id="stopScan" class="secondary" disabled>Finished</button>
+</div>
+      <div id="reloadWarning" class="reloadWarning">
+  <span>
+    <strong>Heads up:</strong>
+    Reloading this page will clear all scans.
+    Use the Copy buttons first if you need the results.
+  </span>
+  <button
+    type="button"
+    class="dismissWarning"
+    aria-label="Dismiss warning"
+  >
+    ✕
+  </button>
+</div>
+
+<!-- MANUAL SERIAL GOES HERE -->
+
+<div class="row">
+  <div class="field" style="flex:1;">
+    <label>Manual serial</label>
+    <input id="manualSerial" type="text" placeholder="Type/paste serial" autocomplete="off" />
+  </div>
+  <button id="addManual" class="secondary" type="button" style="align-self:flex-end;">Add</button>
+</div>
+<!-- COPY BUTTONS GO LAST -->
+<div class="row">
+  <button id="copyNextMissing" type="button" class="small">Copy Next Missing</button>
+  <button id="copyAllMissing" type="button" class="small">Copy All Missing</button>
+  <button id="copyAllScanned" type="button" class="small full">Copy All Found</button>
+</div>
+      
+<details class="results">
+  <summary>Show details</summary>
+
+  <div class="cols">
+  <div class="card">
+      <h3>Found</h3>
+      <div id="scannedList" class="list"></div>
+    </div>
+
+   <div class="card">
+      <h3>Missing</h3>
+      <div id="missingList" class="list"></div>
+    </div>
+
+    <div class="card">
+      <h3>Extra</h3>
+      <div id="extraList" class="list"></div>
+    </div>
+  </div>
+</details>
+
+    </section>
+
+    <section class="card">
+  <h2>Quick Steps</h2>
+
+  <ol class="steps">
+    <li><strong>Choose a mode:</strong> Truck Audit (Excel) or Quick Scan</li>
+    <li><strong>Load inventory (Audit):</strong> Select Excel File → confirm “Loaded sheet”</li>
+    <li><strong>Scan items:</strong> Tap Scan → scan each item once</li>
+    <li><strong>Finish:</strong> Missing = expected − scanned • Extras shown for reference</li>
+    <li><strong>Report missing:</strong> Copy Next Missing → paste into correction form</li>
+  </ol>
+</section>
+
+    <footer class="foot">
+      <span>v0.1 MVP • built for fast field use</span>
+    </footer>
+  </main>
+
+  <!-- Libs (local, cached by service worker after first load) -->
+  <script src="xlsx.full.min.js"></script>
+  <script src="zxing-browser.min.js"></script>
+  <script src="app.js?v=20260120a"></script>
+</body>
+</html>
