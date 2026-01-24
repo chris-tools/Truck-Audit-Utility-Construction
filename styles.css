@@ -192,3 +192,17 @@ button.primary {
   background: rgba(0,0,0,0.08);
   border-radius: 6px;
 }
+/* ===== TAU CONSTRUCTION BANNER : BEGIN ===== */
+#tauConstructionBanner{
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+  padding: 10px 12px;
+  text-align: center;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  background: #ffc107;
+  color: #000;
+  border-bottom: 2px solid rgba(0,0,0,0.25);
+}
+/* ===== TAU CONSTRUCTION BANNER : END ===== */
