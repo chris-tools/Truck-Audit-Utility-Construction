@@ -365,12 +365,17 @@ function looksLikeSerial(s){
 
     const si = hIndex.get(serialHeader);
     const pi = partHeader ? hIndex.get(partHeader) : undefined;
+    const qi = hIndex.get('Quality');
+    const li = hIndex.get('Last Date');
+
 
     for(const r of dataRows){
       const s = normalizeSerial(r[si]);
       if(!s) continue;
       const p = (pi !== undefined) ? String(r[pi] ?? '').trim() : '';
-      expected.set(s, {part: p});
+      const q = (qi !== undefined) ? String(r[qi] ?? '').trim() : '';
+      const ld = (li !== undefined) ? String(r[li] ?? '').trim() : '';
+      expected.set(s, { part: p, quality: q, lastDate: ld });
     }
 
     matchedCount = 0;
@@ -691,7 +696,7 @@ const auditDate =
 
   // Build rows: Tech Name, Audit Date, Status, Serial, Part
 const rows = [];
-rows.push(['Tech Name','Audit Date','Serial','Part','Status']);
+rows.push(['Tech Name','Audit Date','Serial','Part','Quality','Last Date','Status']);
 
 const tech = techName.trim();
 
@@ -702,6 +707,19 @@ const partFor = (serial) => {
   }
   return '';
 };
+const qualityFor = (serial) => {
+  if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
+    return expected.get(serial)?.quality || '';
+  }
+  return '';
+};
+
+const lastDateFor = (serial) => {
+  if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
+    return expected.get(serial)?.lastDate || '';
+  }
+  return '';
+};
 
 // Found
 const foundSerials = (mode === 'audit' && expected && expected.size > 0)
@@ -709,20 +727,20 @@ const foundSerials = (mode === 'audit' && expected && expected.size > 0)
   : Array.from(scanned).sort();
 
 for (const s of foundSerials) {
-  rows.push([tech, auditDate, s, partFor(s), 'Found']);
+  rows.push([tech, auditDate, s, partFor(s), qualityFor(s), lastDateFor(s), 'Found']);
 }
 
 // Missing (only meaningful in audit mode)
 if (mode === 'audit') {
   regenerateMissingQueue(); // ensure it's up to date
   for (const s of (missingQueue || [])) {
-    rows.push([tech, auditDate, s, partFor(s), 'Missing']);
+    rows.push([tech, auditDate, s, partFor(s), qualityFor(s), lastDateFor(s), 'Missing']);
   }
 }
 
 // Extra (only meaningful in audit mode; in quick mode extras is typically empty)
 for (const s of Array.from(extras || []).sort()) {
-  rows.push([tech, auditDate, s, '', 'Extra']);
+  rows.push([tech, auditDate, s, '', '', '', 'Extra']);
 }
 
 // CSV encode
