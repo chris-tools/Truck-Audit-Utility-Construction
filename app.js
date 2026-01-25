@@ -407,25 +407,39 @@ function looksLikeSerial(s){
   });
 
   excelFile.addEventListener('change', async ()=>{
-    const f = excelFile.files && excelFile.files[0];
-    if(!f) return;
-    fileMeta.textContent = f.name;
+  const f = excelFile.files && excelFile.files[0];
+  if(!f) return;
 
-    try{
-      const {sheetName, headers, dataRows} = await parseExcel(f);
+  fileMeta.textContent = f.name;
 
-      const reload = ()=>{
-        const cp = partCol.value === '(None)' ? '' : partCol.value;
-        loadExpectedFromRows(headers, dataRows, serialCol.value, cp);
-        expectedSummary.textContent = `Loaded sheet “${sheetName}”. Expected serials: ${expected.size}.`;
-        updateUI();
-      };
+  try{
+    const {sheetName, headers, dataRows} = await parseExcel(f);
 
-      reload();
-    }catch(e){
-      expectedSummary.textContent = 'Could not read Excel: ' + e.message;
+    // Locked column names (no user selection)
+    const serialHeader = headers.includes('Serial No')
+      ? 'Serial No'
+      : guessColumn(headers, ['Serial No','Serial','Serial Number','SN']);
+
+    const partHeader = headers.includes('Part')
+      ? 'Part'
+      : guessColumn(headers, ['Part','Item','Description']);
+
+    if(!serialHeader){
+      throw new Error('Could not find a Serial column in the Excel sheet.');
     }
-  });
+
+    const partHeaderFinal = headers.includes(partHeader) ? partHeader : '';
+
+    loadExpectedFromRows(headers, dataRows, serialHeader, partHeaderFinal);
+
+    expectedSummary.textContent =
+      `Loaded sheet “${sheetName}”. Expected serials: ${expected.size}.`;
+
+    updateUI();
+  } catch(e){
+    expectedSummary.textContent = 'Could not read Excel: ' + e.message;
+  }
+});
 
   async function startCamera(){
     const devices = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
