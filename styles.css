@@ -230,3 +230,14 @@ button.primary {
   margin-top: 8px;
   color: #1f6feb; /* confident blue */
 }
+.fileBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.fileBtn span {
+  pointer-events: none;
+}
