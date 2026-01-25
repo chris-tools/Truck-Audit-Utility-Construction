@@ -689,11 +689,67 @@ const auditDate =
   String(d.getDate()).padStart(2, '0') + '/' +
   d.getFullYear();
 
-    window.alert(
-      'Tech: ' + techName.trim() +
-      '\nDate: ' + auditDate +
-      '\n\n(Next step: generate the CSV file)'
-    );
+  // Build rows: Tech Name, Audit Date, Status, Serial, Part
+const rows = [];
+rows.push(['Tech Name','Audit Date','Status','Serial','Part']);
+
+const tech = techName.trim();
+
+// Part lookup (only available when Excel is loaded in audit mode)
+const partFor = (serial) => {
+  if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
+    return expected.get(serial)?.part || '';
+  }
+  return '';
+};
+
+// Found
+const foundSerials = (mode === 'audit' && expected && expected.size > 0)
+  ? Array.from(scanned).filter(s => expected.has(s)).sort()
+  : Array.from(scanned).sort();
+
+for (const s of foundSerials) {
+  rows.push([tech, auditDate, 'Found', s, partFor(s)]);
+}
+
+// Missing (only meaningful in audit mode)
+if (mode === 'audit') {
+  regenerateMissingQueue(); // ensure it's up to date
+  for (const s of (missingQueue || [])) {
+    rows.push([tech, auditDate, 'Missing', s, partFor(s)]);
+  }
+}
+
+// Extra (only meaningful in audit mode; in quick mode extras is typically empty)
+for (const s of Array.from(extras || []).sort()) {
+  rows.push([tech, auditDate, 'Extra', s, '']);
+}
+
+// CSV encode
+const esc = (v) => {
+  const s = String(v ?? '');
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+const csv = rows.map(r => r.map(esc).join(',')).join('\n');
+
+// Download
+const safeDate = new Date().toISOString().slice(0,10); // YYYY-MM-DD for filename
+const safeTech = tech.replace(/[^A-Za-z0-9_-]+/g, '_');
+const filename = `TAU_Audit_${safeDate}_${safeTech}.csv`;
+
+const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+const url = URL.createObjectURL(blob);
+
+const a = document.createElement('a');
+a.href = url;
+a.download = filename;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+
+setTimeout(() => URL.revokeObjectURL(url), 1000);
+
   });
 }
 
