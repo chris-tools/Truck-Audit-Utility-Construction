@@ -224,3 +224,9 @@ button.primary {
   border: 2px solid #000;
   color: #000;
 }
+.loadSuccess {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 8px;
+  color: #1f6feb; /* confident blue */
+}
