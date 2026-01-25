@@ -674,6 +674,25 @@ startScan.addEventListener('click', async ()=>{
     copyText(next);
     updateUI();
   });
+  const exportBtn = document.getElementById('exportCsv');
+
+if (exportBtn) {
+  exportBtn.addEventListener('click', () => {
+    if (exportBtn.disabled) return;
+
+    const techName = window.prompt('Tech name (required):', '');
+    if (!techName || !techName.trim()) return;
+
+    const auditDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+    window.alert(
+      'Tech: ' + techName.trim() +
+      '\nDate: ' + auditDate +
+      '\n\n(Next step: generate the CSV file)'
+    );
+  });
+}
+
 
   // PWA install hint
   let deferredPrompt = null;
