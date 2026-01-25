@@ -241,3 +241,20 @@ button.primary {
 .fileBtn span {
   pointer-events: none;
 }
+/* Make the Excel file picker label look like our action buttons */
+label.fileBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px dashed rgba(0,0,0,0.18);
+  background: #ffffff;
+  box-shadow: 0 7px 21px rgba(0, 0, 0, 0.18);
+}
+
+label.fileBtn span {
+  pointer-events: none;
+  font-weight: 600;
+}
