@@ -277,10 +277,15 @@ function looksLikeSerial(s){
   const btn = document.getElementById('exportCsv');
   if (!btn) return;
 
+  // Enable export if there is anything meaningful to export.
+  // In this app:
+  // - scanned = Set of found serials
+  // - extras  = Set of extra serials
+  // - in audit mode, expected.size > 0 means there is a loaded inventory list (missing can be derived)
   const hasData =
-    foundList.length > 0 ||
-    missingList.length > 0 ||
-    extraList.length > 0;
+    (scanned && scanned.size > 0) ||
+    (extras && extras.size > 0) ||
+    (mode === 'audit' && expected && expected.size > 0);
 
   btn.disabled = !hasData;
 }
