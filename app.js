@@ -272,7 +272,18 @@ function looksLikeSerial(s){
     window.prompt('Copy this:', txt);
   }
 }
+  // Export button
+  function updateExportButtonState() {
+  const btn = document.getElementById('exportCsv');
+  if (!btn) return;
 
+  const hasData =
+    foundList.length > 0 ||
+    missingList.length > 0 ||
+    extraList.length > 0;
+
+  btn.disabled = !hasData;
+}
 
   function onSerialScanned(raw){
     const s = normalizeSerial(raw);
@@ -726,5 +737,5 @@ if(dismissWarningBtn && reloadWarning){
     reloadWarning.style.display = 'none';
   });
 }
-
+updateExportButtonState();
 })();
