@@ -84,11 +84,12 @@
     <section id="auditSection" class="card" hidden>
       <h2>2) Upload inventory Excel</h2>
       <div class="row">
-        <label class="fileLabel">
-          <input id="excelFile" type="file" accept=".xlsx,.xls" />
-          <span>Select Excel file</span>
-        </label>
-        
+  <label for="excelFile" class="fileBtn primary bigAction">
+    <input id="excelFile" type="file" accept=".xlsx,.xls" hidden />
+    <span>Select Excel file</span>
+  </label>
+</div>
+       
         <div id="fileMeta" class="meta"></div>
         <div id="expectedSummary" class="meta loadSuccess"></div>
         
