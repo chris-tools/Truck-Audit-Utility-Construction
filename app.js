@@ -294,7 +294,6 @@ function looksLikeSerial(s){
       setBanner('warn', 'Serial Already Scanned: ' + s);
       updateUI();
       return;
-      updateExportButtonState();
     }
 
     scanned.add(s);
@@ -313,6 +312,9 @@ function looksLikeSerial(s){
     }
 
     updateUI();
+
+    updateExportButtonState();
+
   }
 
   function fillSelect(selectEl, headers){
