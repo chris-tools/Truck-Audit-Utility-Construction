@@ -683,7 +683,11 @@ if (exportBtn) {
     const techName = window.prompt('Tech name (required):', '');
     if (!techName || !techName.trim()) return;
 
-    const auditDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const d = new Date();  // MM-DD-YYYY
+const auditDate =
+  String(d.getMonth() + 1).padStart(2, '0') + '/' +
+  String(d.getDate()).padStart(2, '0') + '/' +
+  d.getFullYear();
 
     window.alert(
       'Tech: ' + techName.trim() +
