@@ -294,6 +294,7 @@ function looksLikeSerial(s){
       setBanner('warn', 'Serial Already Scanned: ' + s);
       updateUI();
       return;
+      updateExportButtonState();
     }
 
     scanned.add(s);
