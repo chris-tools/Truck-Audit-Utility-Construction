@@ -691,7 +691,7 @@ const auditDate =
 
   // Build rows: Tech Name, Audit Date, Status, Serial, Part
 const rows = [];
-rows.push(['Tech Name','Audit Date','Status','Serial','Part']);
+rows.push(['Tech Name','Audit Date','Serial','Part','Status']);
 
 const tech = techName.trim();
 
@@ -709,20 +709,20 @@ const foundSerials = (mode === 'audit' && expected && expected.size > 0)
   : Array.from(scanned).sort();
 
 for (const s of foundSerials) {
-  rows.push([tech, auditDate, 'Found', s, partFor(s)]);
+  rows.push([tech, auditDate, s, partFor(s), 'Found']);
 }
 
 // Missing (only meaningful in audit mode)
 if (mode === 'audit') {
   regenerateMissingQueue(); // ensure it's up to date
   for (const s of (missingQueue || [])) {
-    rows.push([tech, auditDate, 'Missing', s, partFor(s)]);
+    rows.push([tech, auditDate, s, partFor(s), 'Missing']);
   }
 }
 
 // Extra (only meaningful in audit mode; in quick mode extras is typically empty)
 for (const s of Array.from(extras || []).sort()) {
-  rows.push([tech, auditDate, 'Extra', s, '']);
+  rows.push([tech, auditDate, s, '', 'Extra']);
 }
 
 // CSV encode
