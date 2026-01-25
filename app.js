@@ -413,14 +413,6 @@ function looksLikeSerial(s){
 
     try{
       const {sheetName, headers, dataRows} = await parseExcel(f);
-      colPicker.hidden = false;
-      fillSelect(serialCol, headers);
-      fillSelect(partCol, ['(None)'].concat(headers));
-
-      const sGuess = guessColumn(headers, ['Serial No','Serial','Serial Number','SN']);
-      const pGuess = guessColumn(headers, ['Part','Item','Description']);
-      serialCol.value = sGuess;
-      partCol.value = headers.includes(pGuess) ? pGuess : '(None)';
 
       const reload = ()=>{
         const cp = partCol.value === '(None)' ? '' : partCol.value;
@@ -428,9 +420,6 @@ function looksLikeSerial(s){
         expectedSummary.textContent = `Loaded sheet “${sheetName}”. Expected serials: ${expected.size}.`;
         updateUI();
       };
-
-      serialCol.onchange = reload;
-      partCol.onchange = reload;
 
       reload();
     }catch(e){
