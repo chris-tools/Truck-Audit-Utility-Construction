@@ -845,5 +845,14 @@ if(dismissWarningBtn && reloadWarning){
     reloadWarning.style.display = 'none';
   });
 }
+  const manualInput = document.getElementById('manualSerial');
+  const addManualBtn = document.getElementById('addManual');
+
+ if (manualInput && addManualBtn) {
+    manualInput.addEventListener('input', () => {
+    addManualBtn.disabled = manualInput.value.trim() === '';
+  });
+}
+
 updateExportButtonState();
 })();
