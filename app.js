@@ -719,13 +719,16 @@ const qualityFor = (serial) => {
 
 const lastDateFor = (serial) => {
   if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
-    const v = expected.get(serial).lastDate;
-    if (!v) return '';
+    const raw = expected.get(serial).lastDate;
+    if (raw === undefined || raw === null || raw === '') return '';
 
-    // If it's an Excel serial number, convert to MM/DD/YYYY
-    if (typeof v === 'number') {
+    // raw might be a number OR a numeric string like "46024"
+    const n = (typeof raw === 'number') ? raw : Number(String(raw).trim());
+
+    // If it looks like an Excel date serial, convert to MM/DD/YYYY
+    if (Number.isFinite(n) && n > 20000 && n < 80000) {
       const epoch = new Date(Date.UTC(1899, 11, 30));
-      const d = new Date(epoch.getTime() + v * 86400000);
+      const d = new Date(epoch.getTime() + n * 86400000);
       return (
         String(d.getMonth() + 1).padStart(2, '0') + '/' +
         String(d.getDate()).padStart(2, '0') + '/' +
@@ -733,7 +736,8 @@ const lastDateFor = (serial) => {
       );
     }
 
-    return v;
+    // Otherwise return as text
+    return String(raw).trim();
   }
   return '';
 };
