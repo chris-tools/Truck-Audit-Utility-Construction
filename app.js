@@ -719,7 +719,21 @@ const qualityFor = (serial) => {
 
 const lastDateFor = (serial) => {
   if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
-    return expected.get(serial)?.lastDate || '';
+    const v = expected.get(serial).lastDate;
+    if (!v) return '';
+
+    // If it's an Excel serial number, convert to MM/DD/YYYY
+    if (typeof v === 'number') {
+      const epoch = new Date(Date.UTC(1899, 11, 30));
+      const d = new Date(epoch.getTime() + v * 86400000);
+      return (
+        String(d.getMonth() + 1).padStart(2, '0') + '/' +
+        String(d.getDate()).padStart(2, '0') + '/' +
+        d.getFullYear()
+      );
+    }
+
+    return v;
   }
   return '';
 };
