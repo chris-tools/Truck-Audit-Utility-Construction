@@ -253,8 +253,11 @@ label.fileBtn {
   background: #ffffff;
   box-shadow: 0 7px 21px rgba(0, 0, 0, 0.18);
 }
-
 label.fileBtn span {
   pointer-events: none;
   font-weight: 600;
+}
+/* Manual serial input: subtle "this is an input" shadow */
+#manualSerial{
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
