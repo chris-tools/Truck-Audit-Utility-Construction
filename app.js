@@ -552,6 +552,7 @@ const cleaned = normalizeSerial(stripControlChars(rawText));
 if(!looksLikeSerial(cleaned)){
   setBanner('warn', 'Unclear scan — hold steadier and try again');
   return;
+}
   // Center-bias: prefer barcodes near the center of the camera view
 if(!isCenteredDecode(result, video, 0.22)){
   setBanner('warn', 'Aim the red line at the barcode (center of camera)');
