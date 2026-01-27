@@ -145,6 +145,51 @@ function looksLikeSerial(s){
 
   return false;
 }
+  function getResultCenter(result){
+  try{
+    const pts =
+      (typeof result.getResultPoints === 'function' && result.getResultPoints()) ||
+      result.resultPoints ||
+      [];
+
+    if(!pts || pts.length === 0) return null;
+
+    let sx = 0, sy = 0, n = 0;
+    for(const p of pts){
+      const x = (typeof p.getX === 'function') ? p.getX() : p.x;
+      const y = (typeof p.getY === 'function') ? p.getY() : p.y;
+      if(typeof x === 'number' && typeof y === 'number'){
+        sx += x;
+        sy += y;
+        n += 1;
+      }
+    }
+
+    if(n === 0) return null;
+    return { x: sx / n, y: sy / n };
+  }catch(_){
+    return null;
+  }
+}
+
+function isCenteredDecode(result, videoEl, tolerance = 0.22){
+  // tolerance = fraction of frame from center (0.22 ≈ 22%)
+  const c = getResultCenter(result);
+  if(!c) return true; // no points → don’t block scan
+
+  const w = videoEl?.videoWidth || 0;
+  const h = videoEl?.videoHeight || 0;
+  if(!w || !h) return true;
+
+  const cx = w / 2;
+  const cy = h / 2;
+
+  const dx = Math.abs(c.x - cx) / w;
+  const dy = Math.abs(c.y - cy) / h;
+
+  return (dx <= tolerance) && (dy <= tolerance);
+}
+
 
   function resetSession(){
     expected.clear();
@@ -507,6 +552,12 @@ const cleaned = normalizeSerial(stripControlChars(rawText));
 if(!looksLikeSerial(cleaned)){
   setBanner('warn', 'Unclear scan — hold steadier and try again');
   return;
+  // Center-bias: prefer barcodes near the center of the camera view
+if(!isCenteredDecode(result, video, 0.22)){
+  setBanner('warn', 'Aim the red line at the barcode (center of camera)');
+  return; // keep scanning, do NOT disarm
+}
+
 }
 
 // One-scan-per-click: accept first VALID result, then disarm until the user taps Scan Next.
