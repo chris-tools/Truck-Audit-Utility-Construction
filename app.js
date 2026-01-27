@@ -34,6 +34,10 @@
   const missingList = $('missingList');
   const extraList = $('extraList');
   const scannedList = $('scannedList');
+  const foundCount = $('foundCount');
+  const missingCount = $('missingCount');
+  const extraCount = $('extraCount');
+
 
   let mode = null; // 'audit' | 'quick'
   let expected = new Map(); // serial -> {part}
@@ -207,6 +211,23 @@ function looksLikeSerial(s){
 
   function updateUI(){
     updateCounts();
+      // Update per-box counters
+  if (foundCount) {
+    foundCount.textContent = `(${scanned.size})`;
+  }
+
+  if (extraCount) {
+    extraCount.textContent = `(${extras.size})`;
+  }
+
+  if (missingCount) {
+    if (mode === 'audit') {
+      missingCount.textContent = `(${missingQueue.length})`;
+    } else {
+      missingCount.textContent = '(—)';
+    }
+  }
+
 
     copyAllScanned.disabled = scanned.size === 0;
 
