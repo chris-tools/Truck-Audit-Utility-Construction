@@ -159,16 +159,20 @@ function looksLikeSerial(s){
   }
 
   function updateCounts(){
-    statExpected.textContent = mode === 'audit' ? String(expected.size) : '—';
-    statMatched.textContent = mode === 'audit' ? String(matchedCount) : '—';
-    statExtra.textContent = String(extras.size);
-    statDup.textContent = String(dupCount);
+  if(statExpected) statExpected.textContent = mode === 'audit' ? String(expected.size) : '—';
+  if(statMatched)  statMatched.textContent  = mode === 'audit' ? String(matchedCount) : '—';
+  if(statExtra)    statExtra.textContent    = String(extras.size);
+  if(statDup)      statDup.textContent      = String(dupCount);
+
+  if(statMissing){
     if(mode === 'audit'){
       statMissing.textContent = String(Math.max(0, expected.size - matchedCount - handledMissing.size));
     } else {
       statMissing.textContent = '—';
     }
   }
+}
+
 
   function renderList(container, items, partLookup){
     container.innerHTML = '';
