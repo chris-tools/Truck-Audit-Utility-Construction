@@ -117,6 +117,18 @@
 
       <!-- Controls live *below* the camera, so the preview stays the focus -->
     <div class="row scanControls">
+      <!-- Last Scanned (UI only - Step 1) -->
+<div id="lastScannedPanel" class="card lastScanned">
+  <div class="lastScannedHeader">
+    <div class="lastScannedTitle">Last Scanned</div>
+    <button id="dismissLastScanned" type="button" class="lastScannedDismiss" aria-label="Dismiss last scanned" disabled>
+      ✕
+    </button>
+  </div>
+
+  <div id="lastScannedValue" class="lastScannedValue">Nothing scanned yet</div>
+</div>
+
   <button id="startScan" class="primary bigAction">Scan</button>
   <button id="flashBtn" class="ghost lightBtn" disabled>Flashlight</button>
   <button id="stopScan" class="secondary" disabled>Finished</button>
