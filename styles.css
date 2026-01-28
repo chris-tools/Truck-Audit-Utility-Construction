@@ -262,3 +262,47 @@ label.fileBtn span {
 #manualSerial{
   box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
+/* ===== Last Scanned panel (Step 1b - visual only) ===== */
+
+.lastScanned {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  box-shadow: none;
+  margin-bottom: 10px;
+}
+
+.lastScannedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.lastScannedTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.lastScannedDismiss {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  color: #9ca3af;
+  cursor: default;
+}
+
+.lastScannedDismiss:disabled {
+  opacity: 0.4;
+}
+
+.lastScannedValue {
+  font-size: 14px;
+  color: #6b7280;
+  padding: 10px 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
