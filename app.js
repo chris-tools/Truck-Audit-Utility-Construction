@@ -570,10 +570,13 @@ await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
 
   // Shut the camera off after a successful scan
   stopCamera().then(()=>{
-    startScan.disabled = false;
-    startScan.textContent = 'Scan Next';
-    stopScan.disabled = true;
-    setBanner('ok', 'Scan captured — tap Scan Next to commit');
+  startScan.disabled = false;
+  startScan.textContent = 'Scan Next';
+
+  // If there's a pending scan, allow Finished to commit it
+  stopScan.disabled = !pendingScanText;
+
+  setBanner('ok', 'Scan captured — tap Scan Next to commit');
   });
 });
 
