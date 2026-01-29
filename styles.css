@@ -262,47 +262,51 @@ label.fileBtn span {
 #manualSerial{
   box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
-/* ===== Last Scanned panel (Step 1b - visual only) ===== */
+/* ===== Last Scanned panel (Step 1d - visual only) ===== */
 
-.lastScanned {
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+.lastScanned{
+  padding: 0;
+  background: transparent;
+  border: none;
   box-shadow: none;
-  margin-bottom: 10px;
+  margin: 10px 0 12px;
 }
 
-.lastScannedHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
+.lastScannedHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin: 0 0 6px;
 }
 
-.lastScannedTitle {
-  font-size: 13px;
+.lastScannedTitle{
+  font-size: 14px;
   font-weight: 600;
   color: #374151;
 }
 
-.lastScannedDismiss {
-  background: transparent;
-  border: none;
-  font-size: 14px;
-  color: #9ca3af;
+.lastScannedDismiss{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 18px;
+  line-height: 1;
+  color: #6b7280;
   cursor: default;
 }
 
-.lastScannedDismiss:disabled {
-  opacity: 0.4;
+.lastScannedDismiss:disabled{
+  opacity: 0.35;
 }
 
-.lastScannedValue {
-  font-size: 14px;
+.lastScannedValue{
+  font-size: 16px;
   color: #6b7280;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
 }
