@@ -303,8 +303,9 @@ label.fileBtn span {
 
 .lastScannedValue{
   font-size: 14px;
+  line-height: 1.2;
   color: #6b7280;
-  padding: 12px 14px;
+  padding: 12px 46px 12px 14px; /* right padding for X */
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -313,13 +314,15 @@ label.fileBtn span {
 /* ===== Last Scanned clear button inside field ===== */
 
 .lastScannedField{
+  display: flex;
+  align-items: center;     /* <-- vertical centering */
   position: relative;
 }
 
 .lastScannedClear{
   position: absolute;
-  top: 50%;
   right: 10px;
+  top: 50%;
   transform: translateY(-50%);
   width: 28px;
   height: 28px;
@@ -329,14 +332,9 @@ label.fileBtn span {
   font-size: 16px;
   line-height: 1;
   color: #6b7280;
-  cursor: default;
+
+  display: flex;           /* <-- centers the X inside the button */
+  align-items: center;
+  justify-content: center;
 }
 
-.lastScannedClear:disabled{
-  opacity: 0.35;
-}
-
-/* Add right padding so text doesn't collide with X */
-.lastScannedValue{
-  padding-right: 46px;
-}
