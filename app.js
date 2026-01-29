@@ -851,6 +851,7 @@ const partFor = (serial) => {
   }
   return '';
 };
+    
 const qualityFor = (serial) => {
   if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
     return expected.get(serial)?.quality || '';
@@ -895,22 +896,45 @@ const esc = (v) => {
 
 const csv = rows.map(r => r.map(esc).join(',')).join('\n');
 
-// Download
+// Share (preferred on phones), otherwise download
 const safeDate = new Date().toISOString().slice(0,10); // YYYY-MM-DD for filename
 const safeTech = tech.replace(/[^A-Za-z0-9_-]+/g, '_');
 const filename = `TAU_Audit_${safeDate}_${safeTech}.csv`;
 
 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-const url = URL.createObjectURL(blob);
 
-const a = document.createElement('a');
-a.href = url;
-a.download = filename;
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
+// Try native share sheet first (iOS/Android support varies)
+(async () => {
+  try {
+    const file = new File([blob], filename, { type: 'text/csv' });
 
-setTimeout(() => URL.revokeObjectURL(url), 1000);
+    if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+      await navigator.share({
+        files: [file],
+        title: 'Truck Audit Utility Export',
+        text: 'TAU export CSV'
+      });
+      setBanner('ok', 'Share sheet opened');
+      return;
+    }
+  } catch (e) {
+    // If share fails, fall back to download
+  }
+
+  // Fallback: download
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  setBanner('ok', 'CSV downloaded');
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+})();
 
   });
 }
