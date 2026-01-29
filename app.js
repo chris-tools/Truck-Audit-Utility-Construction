@@ -690,6 +690,7 @@ startScan.addEventListener('click', async ()=>{
   });
 
   stopScan.addEventListener('click', async ()=>{
+        commitPendingIfAny();
     // Turn flashlight off immediately when finishing.
     if(streamTrack && torchSupported && torchOn){
       try{ await streamTrack.applyConstraints({advanced:[{torch: false}]}); }catch(_){/* ignore */}
@@ -770,12 +771,19 @@ const dismissLastScannedBtn = document.getElementById('dismissLastScanned');
 function renderLastScannedUI(){
   if(!lastScannedValueEl || !dismissLastScannedBtn) return;
 
-  if(pendingScanText){
+    if(pendingScanText){
     lastScannedValueEl.textContent = pendingScanText;
     dismissLastScannedBtn.disabled = false;
+
+    // Allow "Finished" to commit the last pending scan
+    if(stopScan) stopScan.disabled = false;
   }else{
     lastScannedValueEl.textContent = 'Nothing scanned yet';
     dismissLastScannedBtn.disabled = true;
+
+    // If camera isn't actively scanning, keep Finished disabled
+    // (your existing scan start/stop logic will also control this)
+    if(stopScan && !armed) stopScan.disabled = true;
   }
 }
 
