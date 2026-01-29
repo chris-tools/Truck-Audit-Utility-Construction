@@ -310,3 +310,33 @@ label.fileBtn span {
   border-radius: 12px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.08);
 }
+/* ===== Last Scanned clear button inside field ===== */
+
+.lastScannedField{
+  position: relative;
+}
+
+.lastScannedClear{
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 16px;
+  line-height: 1;
+  color: #6b7280;
+  cursor: default;
+}
+
+.lastScannedClear:disabled{
+  opacity: 0.35;
+}
+
+/* Add right padding so text doesn't collide with X */
+.lastScannedValue{
+  padding-right: 46px;
+}
