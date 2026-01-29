@@ -566,14 +566,14 @@ await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
   if(armTimeoutId){ clearTimeout(armTimeoutId); armTimeoutId = null; }
 
   scanSuccessSound();
-  onSerialScanned(cleaned);
+  setPendingScan(cleaned);
 
   // Shut the camera off after a successful scan
   stopCamera().then(()=>{
     startScan.disabled = false;
     startScan.textContent = 'Scan Next';
     stopScan.disabled = true;
-    setBanner('ok', 'Scan saved — camera off');
+    setBanner('ok', 'Scan captured — tap Scan Next to commit');
   });
 });
 
@@ -649,6 +649,8 @@ cameraStream = null;
   flashBtn.classList.remove('on');
 }
 startScan.addEventListener('click', async ()=>{
+      // Commit any pending Last Scanned BEFORE starting the next scan
+    commitPendingIfAny();
     const originalLabel = startScan.textContent;
     startScan.disabled = true;
     startScan.textContent = 'Scanning…';
@@ -759,6 +761,57 @@ startScan.addEventListener('click', async ()=>{
     copyText(next);
     updateUI();
   });
+  // ===== Last Scanned (pending commit) =====
+let pendingScanText = ''; // holds scan waiting to be committed
+
+const lastScannedValueEl = document.getElementById('lastScannedValue');
+const dismissLastScannedBtn = document.getElementById('dismissLastScanned');
+
+function renderLastScannedUI(){
+  if(!lastScannedValueEl || !dismissLastScannedBtn) return;
+
+  if(pendingScanText){
+    lastScannedValueEl.textContent = pendingScanText;
+    dismissLastScannedBtn.disabled = false;
+  }else{
+    lastScannedValueEl.textContent = 'Nothing scanned yet';
+    dismissLastScannedBtn.disabled = true;
+  }
+}
+
+function setPendingScan(text){
+  pendingScanText = (text || '').trim();
+  renderLastScannedUI();
+}
+
+function clearPendingScan(){
+  pendingScanText = '';
+  renderLastScannedUI();
+}
+
+// When the user taps Scan/Scan Next, commit the previous pending scan first
+function commitPendingIfAny(){
+  if(!pendingScanText) return false;
+
+  // This is the "real" commit into Found/Missing/Extra:
+  onSerialScanned(pendingScanText);
+
+  clearPendingScan();
+  return true;
+}
+
+// X button: discard pending scan (do not commit)
+if(dismissLastScannedBtn){
+  dismissLastScannedBtn.addEventListener('click', ()=>{
+    if(!pendingScanText) return;
+    clearPendingScan();
+    setBanner('ok', 'Last scan discarded');
+  });
+}
+
+// Initialize the UI on load
+renderLastScannedUI();
+
   const exportBtn = document.getElementById('exportCsv');
 
 if (exportBtn) {
