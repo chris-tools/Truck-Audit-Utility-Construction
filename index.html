@@ -114,9 +114,6 @@
         <video id="video" muted playsinline></video>
         <div class="scanGuide" aria-hidden="true"></div>
       </div>
-
-      <!-- Controls live *below* the camera, so the preview stays the focus -->
-    <div class="row scanControls">
       <!-- Last Scanned (UI only - Step 1) -->
 <div id="lastScannedPanel" class="card lastScanned">
   <div class="lastScannedHeader">
@@ -128,6 +125,10 @@
 
   <div id="lastScannedValue" class="lastScannedValue">Nothing scanned yet</div>
 </div>
+
+      <!-- Controls live *below* the camera, so the preview stays the focus -->
+    <div class="row scanControls">
+      
 
   <button id="startScan" class="primary bigAction">Scan</button>
   <button id="flashBtn" class="ghost lightBtn" disabled>Flashlight</button>
