@@ -310,13 +310,14 @@ label.fileBtn span {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  width: 100%;
+  display: block;
 }
 /* ===== Last Scanned clear button inside field ===== */
 
 .lastScannedField{
-  display: flex;
-  align-items: center;     /* <-- vertical centering */
   position: relative;
+  width: 100%;
 }
 
 .lastScannedClear{
@@ -324,17 +325,19 @@ label.fileBtn span {
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
+
   width: 28px;
   height: 28px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: #ffffff;
+
   font-size: 16px;
   line-height: 1;
+
   color: #6b7280;
 
-  display: flex;           /* <-- centers the X inside the button */
+  display: flex;
   align-items: center;
   justify-content: center;
 }
-
