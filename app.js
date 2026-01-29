@@ -444,7 +444,7 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
       if(!s) continue;
       const p = (pi !== undefined) ? String(r[pi] ?? '').trim() : '';
       const q = (qi !== undefined) ? String(r[qi] ?? '').trim() : '';
-      const ld = (li !== undefined) ? String(r[li] ?? '').trim() : '';
+      const ld = (li !== undefined) ? formatExcelDateCell(r[li]) : '';
       expected.set(s, { part: p, quality: q, lastDate: ld });
     }
 
@@ -475,6 +475,46 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
     setBanner('ok', 'Quick Scan mode ready');
     updateUI();
   });
+// ===== Excel date normalization helper =====
+function formatExcelDateCell(v) {
+  if (v === null || v === undefined) return '';
+
+  // If SheetJS gives us a real Date object
+  if (v instanceof Date && !isNaN(v.getTime())) {
+    const mm = String(v.getMonth() + 1).padStart(2, '0');
+    const dd = String(v.getDate()).padStart(2, '0');
+    const yy = v.getFullYear();
+    return `${mm}/${dd}/${yy}`;
+  }
+
+  // If it's already a readable string, keep it
+  if (typeof v === 'string') {
+    const s = v.trim();
+    if (!s) return '';
+    // Numeric string like "46024"
+    if (/^\d+(\.\d+)?$/.test(s)) {
+      v = Number(s);
+    } else {
+      return s;
+    }
+  }
+
+  // Excel serial date number
+  if (typeof v === 'number' && isFinite(v)) {
+    const serial = Math.floor(v);
+    if (serial > 20000 && serial < 90000) {
+      const excelEpoch = new Date(1899, 11, 30);
+      const d = new Date(excelEpoch.getTime() + serial * 86400000);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const yy = d.getFullYear();
+      return `${mm}/${dd}/${yy}`;
+    }
+    return String(v);
+  }
+
+  return String(v).trim();
+}
 
   excelFile.addEventListener('change', async ()=>{
   const f = excelFile.files && excelFile.files[0];
