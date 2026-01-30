@@ -60,6 +60,7 @@
   let startingCamera = false;  // prevents double-start
   let hasScannedOnce = false;
   let armTimeoutId = null;
+  let armDelayId = null;
   let audioCtx = null;
 
   function ensureAudio(){
@@ -696,7 +697,7 @@ startScan.addEventListener('click', async ()=>{
     commitPendingIfAny();
     const originalLabel = startScan.textContent;
     startScan.disabled = true;
-    startScan.textContent = 'Scanning…';
+    startScan.textContent = 'Aim…';
     stopScan.disabled = false;
     scanStartSound();
 
@@ -709,19 +710,37 @@ startScan.addEventListener('click', async ()=>{
         setBanner('ok', 'Camera started');
       }
 
-      // Arm for exactly one scan. The decode callback will disarm + re-enable the button.
-      armed = true;
-      if(armTimeoutId){ clearTimeout(armTimeoutId); }
-      armTimeoutId = setTimeout(()=>{
-        if(!armed) return;
-        armed = false;
-        stopCamera().then(()=>{
-        startScan.disabled = false;
-        startScan.textContent = hasScannedOnce ? 'Scan Next' : 'Scan';
-        stopScan.disabled = true;
-        setBanner('warn', 'Timed out — tap Scan Next to try again');
-          });
-      }, 30000);
+      // Arm for exactly one scan, but with a short delay so the user can align the red bar.
+armed = false;
+
+// Clear any previous timers
+if(armDelayId){ clearTimeout(armDelayId); armDelayId = null; }
+if(armTimeoutId){ clearTimeout(armTimeoutId); armTimeoutId = null; }
+
+// Small “get ready” delay
+startScan.textContent = 'Aim…';
+
+armDelayId = setTimeout(()=>{
+  armDelayId = null;
+  armed = true;
+  startScan.textContent = 'Scanning…';
+
+  if(armDelayId){ clearTimeout(armDelayId); armDelayId = null; }
+
+  // Timeout starts AFTER we arm
+  armTimeoutId = setTimeout(()=>{
+    if(!armed) return;
+    armed = false;
+    stopCamera().then(()=>{
+      startScan.disabled = false;
+      startScan.textContent = hasScannedOnce ? 'Scan Next' : 'Scan';
+      stopScan.disabled = true;
+      setBanner('warn', 'Timed out — tap Scan Next to try again');
+    });
+  }, 30000);
+
+}, 450);
+
     }catch(e){
       startingCamera = false;
       armed = false;
