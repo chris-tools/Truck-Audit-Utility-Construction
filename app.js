@@ -690,66 +690,65 @@ cameraStream = null;
   flashBtn.textContent = 'Flashlight';
   flashBtn.classList.remove('on');
 }
-startScan.addEventListener('click', async ()=>{
-      // Commit any pending Last Scanned BEFORE starting the next scan
+startScan.addEventListener('click', ()=>{
+  // Run async logic without try/catch keywords (prevents "unexpected token catch" parse failures)
+  (async ()=>{
+    // Commit any pending Last Scanned BEFORE starting the next scan
     commitPendingIfAny();
+
     const originalLabel = startScan.textContent;
     startScan.disabled = true;
     startScan.textContent = 'Aim…';
     stopScan.disabled = false;
     scanStartSound();
 
-    try{
-      // Start the camera once, then perform one scan per tap.
-      if(!streamTrack && !startingCamera){
-        startingCamera = true;
-        await startCamera();
-        startingCamera = false;
-        setBanner('ok', 'Camera started');
-      }
-
-      // Arm for exactly one scan, but with a short delay so the user can align the red bar.
-      lastCandidate = '';
-      candidateSince = 0;
-      armed = false;
-
-// Clear any previous timers
-if(armDelayId){ clearTimeout(armDelayId); armDelayId = null; }
-if(armTimeoutId){ clearTimeout(armTimeoutId); armTimeoutId = null; }
-
-// Small “get ready” delay
-startScan.textContent = 'Aim…';
-
-armDelayId = setTimeout(()=>{
-  armDelayId = null;
-  armed = true;
-  startScan.textContent = 'Scanning…';
-
-  if(armDelayId){ clearTimeout(armDelayId); armDelayId = null; }
-
-  // Timeout starts AFTER we arm
-  armTimeoutId = setTimeout(()=>{
-    if(!armed) return;
-    armed = false;
-    stopCamera().then(()=>{
-      startScan.disabled = false;
-      startScan.textContent = hasScannedOnce ? 'Scan Next' : 'Scan';
-      stopScan.disabled = true;
-      setBanner('warn', 'Timed out — tap Scan Next to try again');
-    });
-  }, 30000);
-
-}, 450);
-
-    }catch(e){
+    // Start the camera once, then perform one scan per tap.
+    if(!streamTrack && !startingCamera){
+      startingCamera = true;
+      await startCamera();
       startingCamera = false;
-      armed = false;
-      setBanner('bad', 'Camera error: ' + e.message);
-      startScan.disabled = false;
-      startScan.textContent = originalLabel === 'Scan Next' ? 'Scan' : originalLabel;
-      stopScan.disabled = true;
+      setBanner('ok', 'Camera started');
     }
+
+    // Arm for exactly one scan, but with a short delay so the user can align the red bar.
+    armed = false;
+
+    // Clear any previous timers
+    if(armDelayId){ clearTimeout(armDelayId); armDelayId = null; }
+    if(armTimeoutId){ clearTimeout(armTimeoutId); armTimeoutId = null; }
+
+    startScan.textContent = 'Aim…';
+
+    armDelayId = setTimeout(()=>{
+      armDelayId = null;
+      armed = true;
+      startScan.textContent = 'Scanning…';
+
+      // Timeout starts AFTER we arm
+      armTimeoutId = setTimeout(()=>{
+        if(!armed) return;
+        armed = false;
+        stopCamera().then(()=>{
+          startScan.disabled = false;
+          startScan.textContent = hasScannedOnce ? 'Scan Next' : 'Scan';
+          stopScan.disabled = true;
+          setBanner('warn', 'Timed out — tap Scan Next to try again');
+        });
+      }, 30000);
+
+    }, 450);
+
+  })().catch((e)=>{
+    // Error handler without try/catch keywords
+    startingCamera = false;
+    armed = false;
+    setBanner('bad', 'Camera error: ' + (e && e.message ? e.message : String(e)));
+
+    startScan.disabled = false;
+    startScan.textContent = 'Scan';
+    stopScan.disabled = true;
   });
+});
 
   stopScan.addEventListener('click', async ()=>{
         commitPendingIfAny();
