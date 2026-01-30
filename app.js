@@ -1,4 +1,6 @@
 (function(){
+  alert('TAU: app.js loaded');
+
   const $ = (id)=>document.getElementById(id);
 
   const modeAuditBtn = $('modeAuditBtn');
