@@ -1,7 +1,4 @@
-function TAU_INIT(){
-
-  alert('TAU: app.js loaded');
-
+(function(){
   const $ = (id)=>document.getElementById(id);
 
   const modeAuditBtn = $('modeAuditBtn');
@@ -64,7 +61,10 @@ function TAU_INIT(){
   let hasScannedOnce = false;
   let armTimeoutId = null;
   let armDelayId = null;
- 
+  let lastCandidate = '';
+  let candidateSince = 0;
+  const DWELL_MS = 250; // milliseconds a code must stay steady
+
   let audioCtx = null;
 
   function ensureAudio(){
@@ -559,7 +559,8 @@ function formatExcelDateCell(v) {
   async function startCamera(){
     const devices = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
 
-    // Prefer the rear camera.
+    // Prefer the rear camera. On iOS, device labels may be empty until permission is granted;
+    // in that case, the "environment" camera is often the *last* entry.
     let deviceId = preferredDeviceId;
     if(!deviceId){
       const byLabel = (devices || []).find(d=>/back|rear|environment/i.test(d.label||''));
@@ -568,47 +569,76 @@ function formatExcelDateCell(v) {
     }
     preferredDeviceId = deviceId || null;
 
-    scanner = new ZXingBrowser.BrowserMultiFormatReader();
+   scanner = new ZXingBrowser.BrowserMultiFormatReader();
+  
+    // Ask for a sharper video feed (helps tiny 2D codes a LOT)
+const constraints = {
+  audio: false,
+  video: {
+    deviceId: deviceId ? { exact: deviceId } : undefined,
+    facingMode: deviceId ? undefined : { ideal: 'environment' },
 
-    const constraints = {
-      audio: false,
-      video: {
-        deviceId: deviceId ? { exact: deviceId } : undefined,
-        facingMode: deviceId ? undefined : { ideal: 'environment' },
-        width:  { ideal: 1920 },
-        height: { ideal: 1080 },
-        frameRate: { ideal: 30, max: 30 }
-      }
-    };
+    // High-res request (reliability > battery)
+    width:  { ideal: 1920 },
+    height: { ideal: 1080 },
+    frameRate: { ideal: 30, max: 30 }
+  }
+};
 
-    await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
-      // Only act on a real decode result, and only when armed
-      if(!result || !armed) return;
+await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
 
-      const rawText = result.getText();
-      const cleaned = normalizeSerial(stripControlChars(rawText));
+  // Only act on a real decode result, and only when the user has armed scanning
+  if(!result || !armed) return;
 
-      // Accept any decoded text (QR + 1D + 2D)
-      armed = false;
-      hasScannedOnce = true;
-      if(armTimeoutId){ clearTimeout(armTimeoutId); armTimeoutId = null; }
+  const rawText = result.getText();
+  const cleaned = normalizeSerial(stripControlChars(rawText));
+  // Dwell: require the same code to be seen steadily for DWELL_MS before accepting it
+const now = Date.now();
 
-      scanSuccessSound();
-      setPendingScan(cleaned);
+if (cleaned !== lastCandidate) {
+  lastCandidate = cleaned;
+  candidateSince = now;
+  return; // keep scanning; do not accept yet
+}
 
-      // Shut the camera off after a successful scan
-      stopCamera().then(()=>{
-        startScan.disabled = false;
-        startScan.textContent = 'Scan Next';
+if ((now - candidateSince) < DWELL_MS) {
+  return; // still waiting for steady dwell time
+}
 
-        // If there's a pending scan, allow Finished to commit it
-        stopScan.disabled = !pendingScanText;
 
-        setBanner('ok', 'Scan captured — tap Scan Next to commit');
-      });
-    });
+  // If the decode looks like junk, ignore it and KEEP scanning (do not disarm)
+  if(!looksLikeSerial(cleaned)){
+    setBanner('warn', 'Unclear scan — hold steadier and try again');
+    return;
+  }
 
-    // Setup torch/track references after stream is attached
+  // Center-bias: prefer barcodes near the center of the camera view
+  if(!isCenteredDecode(result, video, 0.22)){
+    setBanner('warn', 'Aim the red line at the barcode (center of camera)');
+    return; // keep scanning, do NOT disarm
+  }
+
+  // One-scan-per-click: accept first VALID result, then disarm until the user taps Scan Next.
+  armed = false;
+  hasScannedOnce = true;
+  if(armTimeoutId){ clearTimeout(armTimeoutId); armTimeoutId = null; }
+
+  scanSuccessSound();
+  setPendingScan(cleaned);
+
+  // Shut the camera off after a successful scan
+  stopCamera().then(()=>{
+  startScan.disabled = false;
+  startScan.textContent = 'Scan Next';
+
+  // If there's a pending scan, allow Finished to commit it
+  stopScan.disabled = !pendingScanText;
+
+  setBanner('ok', 'Scan captured — tap Scan Next to commit');
+  });
+});
+
+
     try{
       const stream = video.srcObject;
       cameraStream = stream;
@@ -616,61 +646,50 @@ function formatExcelDateCell(v) {
         streamTrack = stream.getVideoTracks()[0];
         const caps = streamTrack.getCapabilities ? streamTrack.getCapabilities() : {};
         torchSupported = !!caps.torch;
-
         flashBtn.hidden = false;
         flashBtn.disabled = !torchSupported;
         torchOn = false;
         flashBtn.textContent = torchSupported ? 'Flashlight' : 'Flashlight (N/A)';
         flashBtn.classList.remove('on');
 
-        // No forced zoom here (baseline reliability)
+        // Default zoom: if the device supports it, gently zoom in to help barcode reading.
         zoomSupported = typeof caps.zoom === 'object' && caps.zoom !== null;
+        if(zoomSupported){
+          const minZ = Number(caps.zoom.min ?? 1);
+          const maxZ = Number(caps.zoom.max ?? 1);
+          const target = Math.min(maxZ, Math.max(minZ, 2)); // aim for ~2x without exceeding caps
+          try{
+            await streamTrack.applyConstraints({advanced:[{zoom: target}]});
+          }catch(_){/* ignore */}
+        }
       }
     }catch(_){}
   }
 
-  async function stopCamera(){
-    try{
-      const stream = cameraStream || video?.srcObject;
+async function stopCamera(){
+  try{
+    const stream = cameraStream || video?.srcObject;
 
-      // Best-effort: turn torch off before stopping tracks
-      if(streamTrack && torchSupported && torchOn){
-        try{ await streamTrack.applyConstraints({advanced:[{torch:false}]}); }catch(_){}
-      }
+    // Best-effort: turn torch off before stopping tracks (prevents some iOS weirdness)
+    if(streamTrack && torchSupported && torchOn){
+      try{ await streamTrack.applyConstraints({advanced:[{torch:false}]}); }catch(_){}
+    }
 
-      // Stop ALL tracks
-      if(stream && typeof stream.getTracks === 'function'){
-        stream.getTracks().forEach(t => t.stop());
-      }else if(streamTrack){
-        streamTrack.stop();
-      }
-
-      // Stop ZXing decoder
-      if(scanner) scanner.reset();
-
-      if(video){
-        try{ video.pause(); }catch(_){}
-        video.srcObject = null;
-        try{ video.removeAttribute('src'); }catch(_){}
-        try{ video.load(); }catch(_){}
-      }
-
-      cameraStream = null;
-    }catch(_){}
-
-    // Reset state
-    scanner = null;
-    streamTrack = null;
-    torchSupported = false;
-    torchOn = false;
-    zoomSupported = false;
-
-    flashBtn.hidden = false;
-    flashBtn.disabled = true;
-    flashBtn.textContent = 'Flashlight';
-    flashBtn.classList.remove('on');
-  }
-
+    // Stop ALL tracks (not just one stored track)
+    if(stream && typeof stream.getTracks === 'function'){
+      stream.getTracks().forEach(t => t.stop());
+    }else if(streamTrack){
+      streamTrack.stop(); // fallback
+    }
+    // Now stop the ZXing decoder
+if(scanner) scanner.reset();
+    
+if(video){
+  try{ video.pause(); }catch(_){}
+  video.srcObject = null;
+  try{ video.removeAttribute('src'); }catch(_){}
+  try{ video.load(); }catch(_){}
+}
 
 // Clear stored stream reference
 cameraStream = null;
@@ -690,65 +709,66 @@ cameraStream = null;
   flashBtn.textContent = 'Flashlight';
   flashBtn.classList.remove('on');
 }
-startScan.addEventListener('click', ()=>{
-  // Run async logic without try/catch keywords (prevents "unexpected token catch" parse failures)
-  (async ()=>{
-    // Commit any pending Last Scanned BEFORE starting the next scan
+startScan.addEventListener('click', async ()=>{
+      // Commit any pending Last Scanned BEFORE starting the next scan
     commitPendingIfAny();
-
     const originalLabel = startScan.textContent;
     startScan.disabled = true;
     startScan.textContent = 'Aim…';
     stopScan.disabled = false;
     scanStartSound();
 
-    // Start the camera once, then perform one scan per tap.
-    if(!streamTrack && !startingCamera){
-      startingCamera = true;
-      await startCamera();
+    try{
+      // Start the camera once, then perform one scan per tap.
+      if(!streamTrack && !startingCamera){
+        startingCamera = true;
+        await startCamera();
+        startingCamera = false;
+        setBanner('ok', 'Camera started');
+      }
+
+      // Arm for exactly one scan, but with a short delay so the user can align the red bar.
+      lastCandidate = '';
+      candidateSince = 0;
+      armed = false;
+
+// Clear any previous timers
+if(armDelayId){ clearTimeout(armDelayId); armDelayId = null; }
+if(armTimeoutId){ clearTimeout(armTimeoutId); armTimeoutId = null; }
+
+// Small “get ready” delay
+startScan.textContent = 'Aim…';
+
+armDelayId = setTimeout(()=>{
+  armDelayId = null;
+  armed = true;
+  startScan.textContent = 'Scanning…';
+
+  if(armDelayId){ clearTimeout(armDelayId); armDelayId = null; }
+
+  // Timeout starts AFTER we arm
+  armTimeoutId = setTimeout(()=>{
+    if(!armed) return;
+    armed = false;
+    stopCamera().then(()=>{
+      startScan.disabled = false;
+      startScan.textContent = hasScannedOnce ? 'Scan Next' : 'Scan';
+      stopScan.disabled = true;
+      setBanner('warn', 'Timed out — tap Scan Next to try again');
+    });
+  }, 30000);
+
+}, 450);
+
+    }catch(e){
       startingCamera = false;
-      setBanner('ok', 'Camera started');
+      armed = false;
+      setBanner('bad', 'Camera error: ' + e.message);
+      startScan.disabled = false;
+      startScan.textContent = originalLabel === 'Scan Next' ? 'Scan' : originalLabel;
+      stopScan.disabled = true;
     }
-
-    // Arm for exactly one scan, but with a short delay so the user can align the red bar.
-    armed = false;
-
-    // Clear any previous timers
-    if(armDelayId){ clearTimeout(armDelayId); armDelayId = null; }
-    if(armTimeoutId){ clearTimeout(armTimeoutId); armTimeoutId = null; }
-
-    startScan.textContent = 'Aim…';
-
-    armDelayId = setTimeout(()=>{
-      armDelayId = null;
-      armed = true;
-      startScan.textContent = 'Scanning…';
-
-      // Timeout starts AFTER we arm
-      armTimeoutId = setTimeout(()=>{
-        if(!armed) return;
-        armed = false;
-        stopCamera().then(()=>{
-          startScan.disabled = false;
-          startScan.textContent = hasScannedOnce ? 'Scan Next' : 'Scan';
-          stopScan.disabled = true;
-          setBanner('warn', 'Timed out — tap Scan Next to try again');
-        });
-      }, 30000);
-
-    }, 450);
-
-  })().catch((e)=>{
-    // Error handler without try/catch keywords
-    startingCamera = false;
-    armed = false;
-    setBanner('bad', 'Camera error: ' + (e && e.message ? e.message : String(e)));
-
-    startScan.disabled = false;
-    startScan.textContent = 'Scan';
-    stopScan.disabled = true;
   });
-});
 
   stopScan.addEventListener('click', async ()=>{
         commitPendingIfAny();
@@ -1078,7 +1098,4 @@ if(dismissWarningBtn && reloadWarning){
 }
 
 updateExportButtonState();
-}
-TAU_INIT();
-
-
+})();
