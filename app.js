@@ -61,6 +61,10 @@
   let hasScannedOnce = false;
   let armTimeoutId = null;
   let armDelayId = null;
+  let lastCandidate = '';
+  let candidateSince = 0;
+  const DWELL_MS = 350; // milliseconds a code must stay steady
+
   let audioCtx = null;
 
   function ensureAudio(){
@@ -588,6 +592,19 @@ await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
 
   const rawText = result.getText();
   const cleaned = normalizeSerial(stripControlChars(rawText));
+  // Dwell: require the same code to be seen steadily for DWELL_MS before accepting it
+const now = Date.now();
+
+if (cleaned !== lastCandidate) {
+  lastCandidate = cleaned;
+  candidateSince = now;
+  return; // keep scanning; do not accept yet
+}
+
+if ((now - candidateSince) < DWELL_MS) {
+  return; // still waiting for steady dwell time
+}
+
 
   // If the decode looks like junk, ignore it and KEEP scanning (do not disarm)
   if(!looksLikeSerial(cleaned)){
@@ -711,7 +728,9 @@ startScan.addEventListener('click', async ()=>{
       }
 
       // Arm for exactly one scan, but with a short delay so the user can align the red bar.
-armed = false;
+      lastCandidate = '';
+      candidateSince = 0;
+      armed = false;
 
 // Clear any previous timers
 if(armDelayId){ clearTimeout(armDelayId); armDelayId = null; }
