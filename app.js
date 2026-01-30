@@ -63,7 +63,7 @@
   let armDelayId = null;
   let lastCandidate = '';
   let candidateSince = 0;
-  const DWELL_MS = 350; // milliseconds a code must stay steady
+  const DWELL_MS = 250; // milliseconds a code must stay steady
 
   let audioCtx = null;
 
