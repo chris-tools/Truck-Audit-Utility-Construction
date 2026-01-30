@@ -558,8 +558,7 @@ function formatExcelDateCell(v) {
   async function startCamera(){
     const devices = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
 
-    // Prefer the rear camera. On iOS, device labels may be empty until permission is granted;
-    // in that case, the "environment" camera is often the *last* entry.
+    // Prefer the rear camera.
     let deviceId = preferredDeviceId;
     if(!deviceId){
       const byLabel = (devices || []).find(d=>/back|rear|environment/i.test(d.label||''));
@@ -568,49 +567,47 @@ function formatExcelDateCell(v) {
     }
     preferredDeviceId = deviceId || null;
 
-   scanner = new ZXingBrowser.BrowserMultiFormatReader();
-  
-    // Ask for a sharper video feed (helps tiny 2D codes a LOT)
-const constraints = {
-  audio: false,
-  video: {
-    deviceId: deviceId ? { exact: deviceId } : undefined,
-    facingMode: deviceId ? undefined : { ideal: 'environment' },
+    scanner = new ZXingBrowser.BrowserMultiFormatReader();
 
-    // High-res request (reliability > battery)
-    width:  { ideal: 1920 },
-    height: { ideal: 1080 },
-    frameRate: { ideal: 30, max: 30 }
-  }
-};
+    const constraints = {
+      audio: false,
+      video: {
+        deviceId: deviceId ? { exact: deviceId } : undefined,
+        facingMode: deviceId ? undefined : { ideal: 'environment' },
+        width:  { ideal: 1920 },
+        height: { ideal: 1080 },
+        frameRate: { ideal: 30, max: 30 }
+      }
+    };
 
-await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
+    await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
+      // Only act on a real decode result, and only when armed
+      if(!result || !armed) return;
 
-  // Accept any decoded text (QR + 1D + 2D)
+      const rawText = result.getText();
+      const cleaned = normalizeSerial(stripControlChars(rawText));
 
-  // Center bias temporarily disabled for reliability
+      // Accept any decoded text (QR + 1D + 2D)
+      armed = false;
+      hasScannedOnce = true;
+      if(armTimeoutId){ clearTimeout(armTimeoutId); armTimeoutId = null; }
 
-  // One-scan-per-click: accept first VALID result, then disarm until the user taps Scan Next.
-  armed = false;
-  hasScannedOnce = true;
-  if(armTimeoutId){ clearTimeout(armTimeoutId); armTimeoutId = null; }
+      scanSuccessSound();
+      setPendingScan(cleaned);
 
-  scanSuccessSound();
-  setPendingScan(cleaned);
+      // Shut the camera off after a successful scan
+      stopCamera().then(()=>{
+        startScan.disabled = false;
+        startScan.textContent = 'Scan Next';
 
-  // Shut the camera off after a successful scan
-  stopCamera().then(()=>{
-  startScan.disabled = false;
-  startScan.textContent = 'Scan Next';
+        // If there's a pending scan, allow Finished to commit it
+        stopScan.disabled = !pendingScanText;
 
-  // If there's a pending scan, allow Finished to commit it
-  stopScan.disabled = !pendingScanText;
+        setBanner('ok', 'Scan captured — tap Scan Next to commit');
+      });
+    });
 
-  setBanner('ok', 'Scan captured — tap Scan Next to commit');
-  });
-});
-
-
+    // Setup torch/track references after stream is attached
     try{
       const stream = video.srcObject;
       cameraStream = stream;
@@ -618,39 +615,61 @@ await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
         streamTrack = stream.getVideoTracks()[0];
         const caps = streamTrack.getCapabilities ? streamTrack.getCapabilities() : {};
         torchSupported = !!caps.torch;
+
         flashBtn.hidden = false;
         flashBtn.disabled = !torchSupported;
         torchOn = false;
         flashBtn.textContent = torchSupported ? 'Flashlight' : 'Flashlight (N/A)';
         flashBtn.classList.remove('on');
 
-        // Default zoom: if the device supports it, gently zoom in to help barcode reading.
+        // No forced zoom here (baseline reliability)
         zoomSupported = typeof caps.zoom === 'object' && caps.zoom !== null;
-        
-async function stopCamera(){
-  try{
-    const stream = cameraStream || video?.srcObject;
+      }
+    }catch(_){}
+  }
 
-    // Best-effort: turn torch off before stopping tracks (prevents some iOS weirdness)
-    if(streamTrack && torchSupported && torchOn){
-      try{ await streamTrack.applyConstraints({advanced:[{torch:false}]}); }catch(_){}
-    }
+  async function stopCamera(){
+    try{
+      const stream = cameraStream || video?.srcObject;
 
-    // Stop ALL tracks (not just one stored track)
-    if(stream && typeof stream.getTracks === 'function'){
-      stream.getTracks().forEach(t => t.stop());
-    }else if(streamTrack){
-      streamTrack.stop(); // fallback
-    }
-    // Now stop the ZXing decoder
-if(scanner) scanner.reset();
-    
-if(video){
-  try{ video.pause(); }catch(_){}
-  video.srcObject = null;
-  try{ video.removeAttribute('src'); }catch(_){}
-  try{ video.load(); }catch(_){}
-}
+      // Best-effort: turn torch off before stopping tracks
+      if(streamTrack && torchSupported && torchOn){
+        try{ await streamTrack.applyConstraints({advanced:[{torch:false}]}); }catch(_){}
+      }
+
+      // Stop ALL tracks
+      if(stream && typeof stream.getTracks === 'function'){
+        stream.getTracks().forEach(t => t.stop());
+      }else if(streamTrack){
+        streamTrack.stop();
+      }
+
+      // Stop ZXing decoder
+      if(scanner) scanner.reset();
+
+      if(video){
+        try{ video.pause(); }catch(_){}
+        video.srcObject = null;
+        try{ video.removeAttribute('src'); }catch(_){}
+        try{ video.load(); }catch(_){}
+      }
+
+      cameraStream = null;
+    }catch(_){}
+
+    // Reset state
+    scanner = null;
+    streamTrack = null;
+    torchSupported = false;
+    torchOn = false;
+    zoomSupported = false;
+
+    flashBtn.hidden = false;
+    flashBtn.disabled = true;
+    flashBtn.textContent = 'Flashlight';
+    flashBtn.classList.remove('on');
+  }
+
 
 // Clear stored stream reference
 cameraStream = null;
