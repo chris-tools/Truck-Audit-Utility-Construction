@@ -1,4 +1,5 @@
-(function(){
+function TAU_INIT(){
+
   alert('TAU: app.js loaded');
 
   const $ = (id)=>document.getElementById(id);
@@ -1078,4 +1079,7 @@ if(dismissWarningBtn && reloadWarning){
 }
 
 updateExportButtonState();
-})();
+}
+TAU_INIT();
+
+
