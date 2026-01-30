@@ -61,10 +61,7 @@
   let hasScannedOnce = false;
   let armTimeoutId = null;
   let armDelayId = null;
-  let lastCandidate = '';
-  let candidateSince = 0;
-  const DWELL_MS = 250; // milliseconds a code must stay steady
-
+ 
   let audioCtx = null;
 
   function ensureAudio(){
@@ -587,36 +584,9 @@ const constraints = {
 
 await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
 
-  // Only act on a real decode result, and only when the user has armed scanning
-  if(!result || !armed) return;
+  // Accept any decoded text (QR + 1D + 2D)
 
-  const rawText = result.getText();
-  const cleaned = normalizeSerial(stripControlChars(rawText));
-  // Dwell: require the same code to be seen steadily for DWELL_MS before accepting it
-const now = Date.now();
-
-if (cleaned !== lastCandidate) {
-  lastCandidate = cleaned;
-  candidateSince = now;
-  return; // keep scanning; do not accept yet
-}
-
-if ((now - candidateSince) < DWELL_MS) {
-  return; // still waiting for steady dwell time
-}
-
-
-  // If the decode looks like junk, ignore it and KEEP scanning (do not disarm)
-  if(!looksLikeSerial(cleaned)){
-    setBanner('warn', 'Unclear scan — hold steadier and try again');
-    return;
-  }
-
-  // Center-bias: prefer barcodes near the center of the camera view
-  if(!isCenteredDecode(result, video, 0.22)){
-    setBanner('warn', 'Aim the red line at the barcode (center of camera)');
-    return; // keep scanning, do NOT disarm
-  }
+  // Center bias temporarily disabled for reliability
 
   // One-scan-per-click: accept first VALID result, then disarm until the user taps Scan Next.
   armed = false;
@@ -654,18 +624,7 @@ if ((now - candidateSince) < DWELL_MS) {
 
         // Default zoom: if the device supports it, gently zoom in to help barcode reading.
         zoomSupported = typeof caps.zoom === 'object' && caps.zoom !== null;
-        if(zoomSupported){
-          const minZ = Number(caps.zoom.min ?? 1);
-          const maxZ = Number(caps.zoom.max ?? 1);
-          const target = Math.min(maxZ, Math.max(minZ, 2)); // aim for ~2x without exceeding caps
-          try{
-            await streamTrack.applyConstraints({advanced:[{zoom: target}]});
-          }catch(_){/* ignore */}
-        }
-      }
-    }catch(_){}
-  }
-
+        
 async function stopCamera(){
   try{
     const stream = cameraStream || video?.srcObject;
