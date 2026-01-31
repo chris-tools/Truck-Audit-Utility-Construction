@@ -589,7 +589,10 @@ await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
   if(!result || !armed) return;
 
   const rawText = result.getText();
-  const cleaned = normalizeSerial(stripControlChars(rawText));
+  let cleaned = normalizeSerial(stripControlChars(rawText));
+
+  // PN labels sometimes include a literal "#" in the encoded text
+cleaned = cleaned.replace(/#/g, '');
 
   // Ignore ultra-short junk decodes silently
   if(!cleaned || cleaned.length < 7){
@@ -599,7 +602,10 @@ await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
   // Reject things that don't look like serials, but stay armed
   if(!looksLikeSerial(cleaned)){
     setBanner('warn', 'Rejected: ' + cleaned);
-    return;
+    // Don’t get “stuck” dwelling on a bad candidate
+    lastCandidate = '';
+    candidateSince = 0;
+    return; // keep scanning
   }
 
   // Accept the scan
