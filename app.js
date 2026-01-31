@@ -17,7 +17,7 @@
   const flashBtn = $('flashBtn');
   const video = $('video');
   const banner = $('banner');
-
+  const IDLE_BANNER_TEXT = 'Scan status: Ready';
   const statExpected = $('statExpected');
   const statMatched = $('statMatched');
   const statMissing = $('statMissing');
@@ -111,14 +111,19 @@
   setTimeout(() => beep(1200, 140, 1.0), 190); // softer tail
 }
 
-  function setBanner(kind, text){
-    banner.hidden = false;
-    banner.className = 'banner ' + kind;
-    banner.textContent = text;
-    if(kind === 'ok'){
-      setTimeout(()=>{ banner.hidden = true; }, 900);
-    }
+ function setBanner(kind, text){
+  banner.hidden = false;
+  banner.className = 'banner ' + kind;
+  banner.textContent = text;
+
+  if(kind === 'ok'){
+    setTimeout(()=>{
+      banner.hidden = true;
+      banner.className = 'banner';
+      banner.textContent = IDLE_BANNER_TEXT;
+    }, 900);
   }
+}
 
   function normalizeSerial(s){
   if(!s) return '';
@@ -1065,6 +1070,9 @@ if ('serviceWorker' in navigator) {
 }
 
   setBanner('ok', 'Choose a mode to begin');
+  banner.className = 'banner';
+  banner.textContent = IDLE_BANNER_TEXT;
+  banner.hidden = true;
   updateUI();
 
 /* Reload warning dismiss */
