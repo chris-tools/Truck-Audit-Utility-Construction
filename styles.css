@@ -352,3 +352,16 @@ label.fileBtn span {
   display: block;
   visibility: hidden;
 }
+/* ==== Banner final override (compact + no layout shift) ==== */
+#banner.banner{
+  min-height: 28px !important;
+  padding: 6px 10px !important;
+  font-size: 0.85rem !important;
+  line-height: 1.2 !important;
+  margin: 0 0 10px 0 !important; /* small space below */
+}
+
+#banner.banner[hidden]{
+  display: block !important;
+  visibility: hidden !important;
+}
