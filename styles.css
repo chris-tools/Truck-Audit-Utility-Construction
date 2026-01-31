@@ -74,6 +74,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .banner.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
 .banner.warn{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
 .banner.bad{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+
+/* Idle scan status text */
+.banner:not(.ok):not(.warn):not(.bad){
+  color: #9ca3af;   /* light grey */
+  background: transparent;
+  border: 1px dashed #e5e7eb;
+}
+
 .scanControls{align-items:stretch}
 .bigAction{flex:1;min-width:180px;font-size:18px;padding:16px 18px}
 
