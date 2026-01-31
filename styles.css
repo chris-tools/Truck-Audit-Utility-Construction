@@ -341,3 +341,13 @@ label.fileBtn span {
   align-items: center;
   justify-content: center;
 }
+/* Prevent banner show/hide from shifting the camera */
+.banner {
+  min-height: 56px;            /* reserves space so the video doesn't move */
+}
+
+/* Override the HTML hidden behavior (normally display:none) */
+.banner[hidden] {
+  display: block;
+  visibility: hidden;
+}
