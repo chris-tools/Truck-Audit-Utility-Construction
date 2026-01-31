@@ -608,7 +608,7 @@ if ((now - candidateSince) < DWELL_MS) {
 
   // If the decode looks like junk, ignore it and KEEP scanning (do not disarm)
   if(!looksLikeSerial(cleaned)){
-    setBanner('warn', 'Unclear scan — hold steadier and try again');
+    setBanner('warn', 'Rejected: ' + cleaned);
     return;
   }
 
