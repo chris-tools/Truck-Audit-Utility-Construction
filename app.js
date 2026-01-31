@@ -605,12 +605,20 @@ if ((now - candidateSince) < DWELL_MS) {
   return; // still waiting for steady dwell time
 }
 
+ const rawText = result.getText();
+const cleaned = normalizeSerial(stripControlChars(rawText));
 
-  // If the decode looks like junk, ignore it and KEEP scanning (do not disarm)
-  if(!looksLikeSerial(cleaned)){
-    setBanner('warn', 'Rejected: ' + cleaned);
-    return;
-  }
+// Ignore ultra-short/garbage decodes silently (prevents "Rejected: A")
+if(!cleaned || cleaned.length < 7){
+  return; // keep scanning
+}
+
+// If the decode looks like junk, ignore it and KEEP scanning (do not disarm)
+if(!looksLikeSerial(cleaned)){
+  setBanner('warn', 'Rejected: ' + cleaned);
+  return;
+}
+
 
   // Center-bias: prefer barcodes near the center of the camera view
   if(!isCenteredDecode(result, video, 0.22)){
