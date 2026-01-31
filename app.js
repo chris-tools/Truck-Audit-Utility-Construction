@@ -110,17 +110,24 @@
   beep(2000, 180, 1.0);     // sharp confirmation
   setTimeout(() => beep(1200, 140, 1.0), 190); // softer tail
 }
+  
+function setIdleBanner(){
+  if(!banner) return;
+  banner.hidden = false;
+  banner.className = 'banner idle';
+  banner.textContent = 'Scan status: Ready';
+}
 
  function setBanner(kind, text){
+  if(!banner) return;
+
   banner.hidden = false;
   banner.className = 'banner ' + kind;
   banner.textContent = text;
 
   if(kind === 'ok'){
     setTimeout(()=>{
-      banner.hidden = true;
-      banner.className = 'banner';
-      banner.textContent = IDLE_BANNER_TEXT;
+      setIdleBanner(); // go back to the idle message
     }, 900);
   }
 }
@@ -1070,9 +1077,9 @@ if ('serviceWorker' in navigator) {
 }
 
   setBanner('ok', 'Choose a mode to begin');
+  setIdleBanner();
   banner.className = 'banner';
   banner.textContent = IDLE_BANNER_TEXT;
-  banner.hidden = true;
   updateUI();
 
 /* Reload warning dismiss */
