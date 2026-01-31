@@ -586,66 +586,40 @@ const constraints = {
 };
 
 await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
-
-  // Only act on a real decode result, and only when the user has armed scanning
   if(!result || !armed) return;
 
   const rawText = result.getText();
   const cleaned = normalizeSerial(stripControlChars(rawText));
-  // Dwell: require the same code to be seen steadily for DWELL_MS before accepting it
-const now = Date.now();
 
-if (cleaned !== lastCandidate) {
-  lastCandidate = cleaned;
-  candidateSince = now;
-  return; // keep scanning; do not accept yet
-}
-
-if ((now - candidateSince) < DWELL_MS) {
-  return; // still waiting for steady dwell time
-}
-
- const rawText = result.getText();
-const cleaned = normalizeSerial(stripControlChars(rawText));
-
-// Ignore ultra-short/garbage decodes silently (prevents "Rejected: A")
-if(!cleaned || cleaned.length < 7){
-  return; // keep scanning
-}
-
-// If the decode looks like junk, ignore it and KEEP scanning (do not disarm)
-if(!looksLikeSerial(cleaned)){
-  setBanner('warn', 'Rejected: ' + cleaned);
-  return;
-}
-
-
-  // Center-bias: prefer barcodes near the center of the camera view
-  if(!isCenteredDecode(result, video, 0.22)){
-    setBanner('warn', 'Aim the red line at the barcode (center of camera)');
-    return; // keep scanning, do NOT disarm
+  // Ignore ultra-short junk decodes silently
+  if(!cleaned || cleaned.length < 7){
+    return;
   }
 
-  // One-scan-per-click: accept first VALID result, then disarm until the user taps Scan Next.
+  // Reject things that don't look like serials, but stay armed
+  if(!looksLikeSerial(cleaned)){
+    setBanner('warn', 'Rejected: ' + cleaned);
+    return;
+  }
+
+  // Accept the scan
   armed = false;
   hasScannedOnce = true;
-  if(armTimeoutId){ clearTimeout(armTimeoutId); armTimeoutId = null; }
+  if(armTimeoutId){
+    clearTimeout(armTimeoutId);
+    armTimeoutId = null;
+  }
 
   scanSuccessSound();
   setPendingScan(cleaned);
 
-  // Shut the camera off after a successful scan
   stopCamera().then(()=>{
-  startScan.disabled = false;
-  startScan.textContent = 'Scan Next';
-
-  // If there's a pending scan, allow Finished to commit it
-  stopScan.disabled = !pendingScanText;
-
-  setBanner('ok', 'Scan captured — tap Scan Next to commit');
+    startScan.disabled = false;
+    startScan.textContent = 'Scan Next';
+    stopScan.disabled = !pendingScanText;
+    setBanner('ok', 'Scan captured — tap Scan Next to commit');
   });
 });
-
 
     try{
       const stream = video.srcObject;
