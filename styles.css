@@ -340,7 +340,7 @@ label.fileBtn span {
   font-weight: 800;
   font-size: 18px;
   line-height: 1;
-  color: #16a34a; /* green */
+  color: #16a34a !important; /* force green */
   flex: 0 0 auto;
 }
 
