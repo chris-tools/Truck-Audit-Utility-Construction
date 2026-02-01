@@ -887,7 +887,7 @@ function flashLastScannedCheck(){
 
   setTimeout(()=>{
     if(lastScannedCheckEl) lastScannedCheckEl.hidden = true;
-  }, 550);
+  }, 750);
 }
 
 // When the user taps Scan/Scan Next, commit the previous pending scan first
