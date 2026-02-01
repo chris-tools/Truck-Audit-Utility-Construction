@@ -302,9 +302,9 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
       copyNextMissing.disabled = missingQueue.length === 0;
       if(copyAllMissing) copyAllMissing.disabled = missingQueue.length === 0;
     } else {
-      copyNextMissing.disabled = true;
-      copyAllMissing.disabled = true;
-    }
+  copyNextMissing.disabled = true;
+  if(copyAllMissing) copyAllMissing.disabled = true;
+}
 
     const scannedArr = Array.from(scanned).sort();
     const extraArr = Array.from(extras).sort();
