@@ -332,6 +332,16 @@ label.fileBtn span {
 .lastScannedField{
   position: relative;
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lastScannedCheck{
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1;
+  color: #16a34a; /* green */
+  flex: 0 0 auto;
 }
 
 .lastScannedClear{
