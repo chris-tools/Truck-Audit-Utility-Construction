@@ -853,8 +853,7 @@ const lastScannedCheckEl = document.getElementById('lastScannedCheck');
 
 function renderLastScannedUI(){
   if(!lastScannedValueEl || !dismissLastScannedBtn) return;
-  if(lastScannedCheckEl) lastScannedCheckEl.hidden = true;
-
+  
     if(pendingScanText){
     lastScannedValueEl.textContent = pendingScanText;
     dismissLastScannedBtn.disabled = false;
@@ -895,13 +894,11 @@ function flashLastScannedCheck(){
 function commitPendingIfAny(){
   if(!pendingScanText) return false;
 
-  // This is the "real" commit into Found/Missing/Extra:
   onSerialScanned(pendingScanText);
 
-  // Flash the confirmation check
-  flashLastScannedCheck();
+  clearPendingScan();        // clears the value + re-renders
+  flashLastScannedCheck();   // now the ✔ can appear and stay briefly
 
-  clearPendingScan();
   return true;
 }
 
