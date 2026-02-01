@@ -300,7 +300,7 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
     if(mode === 'audit'){
       regenerateMissingQueue();
       copyNextMissing.disabled = missingQueue.length === 0;
-      copyAllMissing.disabled = missingQueue.length === 0;
+      if(copyAllMissing) copyAllMissing.disabled = missingQueue.length === 0;
     } else {
       copyNextMissing.disabled = true;
       copyAllMissing.disabled = true;
@@ -828,11 +828,13 @@ armDelayId = setTimeout(()=>{
   copyText(arr.join('\n'));
 });
 
+  if(copyAllMissing){
   copyAllMissing.addEventListener('click', ()=>{
     if(mode !== 'audit') return;
     regenerateMissingQueue();
     copyText(missingQueue.join('\n'));
   });
+}
 
   copyNextMissing.addEventListener('click', ()=>{
     if(mode !== 'audit') return;
