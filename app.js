@@ -848,9 +848,12 @@ let pendingScanText = ''; // holds scan waiting to be committed
 
 const lastScannedValueEl = document.getElementById('lastScannedValue');
 const dismissLastScannedBtn = document.getElementById('dismissLastScanned');
+const lastScannedCheckEl = document.getElementById('lastScannedCheck');
+
 
 function renderLastScannedUI(){
   if(!lastScannedValueEl || !dismissLastScannedBtn) return;
+  if(lastScannedCheckEl) lastScannedCheckEl.hidden = true;
 
     if(pendingScanText){
     lastScannedValueEl.textContent = pendingScanText;
@@ -877,6 +880,16 @@ function clearPendingScan(){
   pendingScanText = '';
   renderLastScannedUI();
 }
+function flashLastScannedCheck(){
+  if(!lastScannedCheckEl) return;
+
+  // Show the check briefly
+  lastScannedCheckEl.hidden = false;
+
+  setTimeout(()=>{
+    if(lastScannedCheckEl) lastScannedCheckEl.hidden = true;
+  }, 550);
+}
 
 // When the user taps Scan/Scan Next, commit the previous pending scan first
 function commitPendingIfAny(){
@@ -884,6 +897,9 @@ function commitPendingIfAny(){
 
   // This is the "real" commit into Found/Missing/Extra:
   onSerialScanned(pendingScanText);
+
+  // Flash the confirmation check
+  flashLastScannedCheck();
 
   clearPendingScan();
   return true;
