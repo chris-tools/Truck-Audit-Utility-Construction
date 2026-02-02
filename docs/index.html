@@ -1,0 +1,223 @@
+<!-- deploy nudge -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Truck Audit Utility</title>
+
+  <meta name="theme-color" content="#0b2a6f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+   <!-- ===== TAU CONSTRUCTION BANNER : BEGIN ===== -->
+<div id="tauConstructionBanner">
+  <span class="tauConstructionLabel">🚧 TAU Construction 🚧</span>
+</div>
+<!-- ===== TAU CONSTRUCTION BANNER : END ===== -->
+
+  <header class="topbar">
+    <div class="brand">
+      
+      <img id="brandLogo" src="Smiley.jpg?v=1" alt="Truck Audit Utility icon" />
+      <div class="titles">
+        
+        <div class="appname">Truck Audit Utility</div>
+        <div class="subtitle">Scan serials • Compare to inventory • Copy missing</div>
+      </div>
+    </div>
+    <button id="installBtn" class="ghost" hidden>Add to Home Screen</button>
+  </header>
+
+  <main class="container">
+    
+<section class="card">
+  <h2>1) Choose a mode</h2>
+
+      <div class="modeRow">
+        <button id="modeAuditBtn" class="primary">Truck Audit (Upload Excel)</button>
+        <button id="modeQuickBtn" class="secondary">Quick Scan (No Excel)</button>
+      </div>
+      <p class="hint">Works offline <em>after</em> the first load. For best results, keep the correction form open in another tab.</p>
+    </section>
+
+    <section id="auditSection" class="card" hidden>
+      <h2>2) Upload inventory Excel</h2>
+      <div class="row">
+  <label for="excelFile" class="fileBtn primary bigAction">
+    <input id="excelFile" type="file" accept=".xlsx,.xls" hidden />
+    <span>Select Excel file</span>
+  </label>
+</div>
+       
+        <div id="fileMeta" class="meta"></div>
+        <div id="expectedSummary" class="meta loadSuccess"></div>
+        
+    </section>
+
+    <section id="scanSection" class="card" hidden>
+      <h2>3) Scan</h2>
+
+      <div id="banner" class="banner" hidden></div>
+
+      <div class="videoWrap">
+        <video id="video" muted playsinline></video>
+        <div class="scanGuide" aria-hidden="true"></div>
+      </div>
+      <!-- Last Scanned (UI only - Step 1) -->
+<div id="lastScannedPanel" class="card lastScanned">
+  <div class="lastScannedHeader">
+  <div class="lastScannedTitle">Last Scanned</div>
+</div>
+
+<div class="lastScannedField">
+  <span id="lastScannedCheck" class="lastScannedCheck" hidden>✓</span>
+
+  <div id="lastScannedValue" class="lastScannedValue">
+    Nothing scanned yet
+  </div>
+
+  <button id="dismissLastScanned" type="button"
+          class="lastScannedClear"
+          aria-label="Dismiss last scanned" disabled>
+    ✕
+  </button>
+</div>
+
+</div>
+
+
+      <!-- Controls live *below* the camera, so the preview stays the focus -->
+    <div class="row scanControls">
+      
+
+  <button id="startScan" class="primary bigAction">Scan</button>
+  <button id="flashBtn" class="ghost lightBtn" disabled>Flashlight</button>
+  <button id="stopScan" class="secondary" disabled>Finished</button>
+</div>
+      <div id="reloadWarning" class="reloadWarning">
+  <span>
+    <strong>Notice:</strong>
+    Reloading this page will clear all scans.
+    Use the Copy buttons first if you need the results.
+  </span>
+  <button
+    type="button"
+    class="dismissWarning"
+    aria-label="Dismiss warning"
+  >
+    ✕
+  </button>
+</div>
+
+<!-- MANUAL SERIAL GOES HERE -->
+
+<div class="row">
+  <div class="field" style="flex:1;">
+    <label>Manual serial</label>
+    <input id="manualSerial" type="text" placeholder="Type/paste serial" autocomplete="off" />
+  </div>
+  <button id="addManual" class="small" disabled>Add</button>
+</div>
+<!-- EXPORT BUTTONS GO LAST -->
+<div class="row">
+  <button id="copyNextMissing" type="button" class="small">Copy Next Missing</button>
+  <button id="copyAllScanned" type="button" class="small full">Copy All Scanned</button>
+  
+  <button id="exportCsv" type="button" class="small" disabled>Export/Share File</button>
+</div>
+      
+<div class="results">
+  <div class="cols">
+
+    <div class="card">
+  <h3>Found <span id="foundCount">(0)</span></h3>
+  <div id="scannedList" class="list"></div>
+</div>
+
+<div class="card">
+  <h3>Missing <span id="missingCount">(0)</span></h3>
+  <div id="missingList" class="list"></div>
+</div>
+
+<div class="card">
+  <h3>Extra <span id="extraCount">(0)</span></h3>
+  <div id="extraList" class="list"></div>
+</div>
+
+  </div>
+</div>
+
+    </section>
+
+<section class="card">
+    <details class="howto">
+      <summary><strong>Need help? How to Audit</strong> (tap to expand)</summary>
+
+    <div class="howto-body">
+      <h3>Truck Audit Instructions</h3>
+      <ol>
+  <li>
+    Tap <strong>Truck Audit (Excel)</strong> or <strong>Quick Scan</strong>.
+    <em>(If you choose Quick Scan, skip to step 3.)</em>
+  </li>
+
+ <li>
+  Tap <strong>Select Excel File</strong>, then choose the file provided by the warehouse employee.
+  You’ll see <strong>“Loaded sheet”</strong> with the number of serials expected.
+  <ul>
+    <li>
+      <strong>Note:</strong> After the file is uploaded, all expected items will appear in the
+      <strong>Missing</strong> list.
+      As each item is scanned, it automatically moves to <strong>Found</strong>.
+    </li>
+  </ul>
+</li>
+
+
+  <li>
+    Tap the blue <strong>Scan</strong> button.
+    <ul>
+      <li>Aim the <strong>red bar</strong> at the barcode or QR code you want to scan.</li>
+      <li>Hold steady until the scan completes.</li>
+      <li>Each serial is saved once — duplicates are ignored.</li>
+    </ul>
+  </li>
+
+  <li>
+    Finish scanning when all deployable items have been scanned.
+    <ul>
+      <li><strong>Missing</strong> = items on the inventory list that were not scanned.</li>
+      <li><strong>Extra</strong> items are shown for reference only.</li>
+    </ul>
+  </li>
+
+  <li>
+    <strong>Copy Next Missing</strong> places the next missing serial on your clipboard so you can paste it into the correction form.
+  </li>
+
+  <li>
+    When finished, tap <strong>Export / Share File</strong>.
+    <ul>
+      <li>Enter your name when prompted.</li>
+      <li>If the <strong>Share sheet</strong> opens, choose Mail, Files, or another option as instructed.</li>
+      <li>If a <strong>preview or download screen</strong> opens instead, tap <strong>More…</strong> to share or attach the file.</li>
+    </ul>
+  </li>
+</ol>
+        </div>
+  </details>
+</section>
+    
+    <footer class="foot">
+      <span>v3.1 • Truck Audit Utility by Chris Gagnon</span>
+    </footer>
+  </main>
+
+  <!-- Libs (local, cached by service worker after first load) -->
+  <script src="xlsx.full.min.js"></script>
+  <script src="zxing-browser.min.js"></script>
+  <script src="app.js?v=20260120a"></script>
+</body>
+</html>
