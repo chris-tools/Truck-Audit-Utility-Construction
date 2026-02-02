@@ -1,0 +1,390 @@
+:root{
+  --blue:#0b2a6f;
+  --blue2:#133a95;
+  --bg:#1b3a8a;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:#111827}
+.topbar{
+  background:var(--blue);
+  color:white;
+  padding:14px 14px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  text-align:center;
+  
+  border-radius:18px;
+  overflow:hidden;
+}
+
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+
+#brandLogo{
+  width:58px;
+  height:58px;
+  object-fit:contain;
+  border-radius:10px;
+  background:white;
+  padding:4px;
+  box-shadow:0 4px 10px rgba(0,0,0,.18);
+}
+
+.titles{min-width:0}
+.appname{font-weight:800;font-size:18px;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subtitle{font-size:12px;color:#dbe6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.container{max-width:980px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 14px;margin:12px 0}
+h2{margin:0 0 10px 0;font-size:16px}
+h3{margin:12px 0 8px 0;font-size:14px}
+.row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:14px;}
+.manualRow input,
+.manualRow button{align-self:flex-end;}
+.manualRow{align-items:flex-end}
+.manualRow .field{flex:1;min-width:220px}
+.manualRow #manualSerial{width:100%}
+.manualRow .field label{display:block}
+.manualRow button{align-self:flex-end}
+
+.modeRow{display:flex;gap:14px;flex-wrap:wrap}
+button{border:1px solid transparent;border-radius:12px;padding:12px 14px;font-weight:700;cursor:pointer}
+button.primary{background:var(--blue2);color:white}
+button.secondary{background:#eef2ff;border-color:#dbe3ff;color:#1f2a44}
+button.ghost{background:transparent;border-color:rgba(255,255,255,.35);color:white}
+button:disabled{opacity:.45;cursor:not-allowed}
+.hint{color:var(--muted);margin:10px 0 0 0;font-size:13px}
+.meta{color:var(--muted);font-size:13px}
+.fileLabel{border:1px dashed #cbd5e1;border-radius:12px;padding:12px 14px;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.fileLabel input{display:none}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;color:var(--muted)}
+.field input,.field select{border:1px solid var(--border);border-radius:12px;padding:12px 12px;font-size:15px;background:white}
+.grow{flex:1;min-width:220px}
+.statusGrid{display:grid;grid-template-columns:repeat(5, minmax(0,1fr));gap:8px;margin:12px 0}
+.stat{border:1px solid var(--border);border-radius:14px;padding:10px;background:#fbfcff}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-size:20px;font-weight:800;margin-top:4px}
+.banner{border-radius:14px;min-height:28px;padding:6px 10px;font-weight:800;font-size:0.85rem;line-height:1.2}
+.banner.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+.banner.warn{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.banner.bad{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+/* Idle scan status text */
+.banner.idle{
+  color:#9ca3af;
+  background:transparent;
+  border:1px dashed #e5e7eb;
+}
+
+/* Idle scan status text */
+.banner:not(.ok):not(.warn):not(.bad){
+  color: #9ca3af;   /* light grey */
+  background: transparent;
+  border: 1px dashed #e5e7eb;
+}
+
+.scanControls{align-items:stretch}
+.bigAction{flex:1;min-width:180px;font-size:18px;padding:16px 18px}
+
+/* Light button lives on white cards, so override the generic "ghost" styling used in the blue header */
+button.ghost.lightBtn{background:#ffffff;border-color:var(--border);color:#1f2a44}
+button.ghost.lightBtn.on{background:#111827;color:#ffffff;border-color:#111827}
+
+.videoWrap{position:relative;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:black;margin:10px 0}
+.scanGuide{position:absolute;left:10%;right:10%;top:50%;height:0;border-top:2px solid rgba(255,0,0,.9);transform:translateY(-50%);pointer-events:none;filter:drop-shadow(0 0 2px rgba(255,0,0,.45))}
+.scanGuide::before{content:"";position:absolute;left:50%;top:-10px;width:0;height:20px;border-left:2px solid rgba(255,0,0,.85);transform:translateX(-50%)}
+video{width:100%;height:320px;object-fit:cover}
+.results{margin-top:5px}
+.cols{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:6px}
+
+.list{border:1px solid var(--border);border-radius:14px;min-height:120px;max-height:260px;overflow:auto;padding:10px;background:#fff}
+.item{padding:8px 10px;border-bottom:1px solid var(--border);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px}
+.item:last-child{border-bottom:none}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#eef2ff;color:#1f2a44;margin-left:6px}
+.bullets{margin:8px 0 0 18px;color:#374151}/* When the page background is dark, make footer readable */
+.foot{
+  color: rgba(255,255,255,.75);
+}
+
+/* Optional: give cards a little lift off the blue background */
+.card{
+  box-shadow: 0 10px 28px rgba(0,0,0,.18);
+}
+
+@media (max-width:900px){
+  .statusGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cols{grid-template-columns:1fr}
+  video{height:260px}
+}
+/* Make the collapsed "How to Audit" card tighter */
+.howto summary{
+  padding: 0;
+}
+.howto[open] summary{
+  padding-bottom: 8px;
+}
+/* Card shadow helper */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px 16px 16px 16px;
+  box-shadow:
+    0 4px 10px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+/* Shadow only for clickable (enabled) buttons */
+button:not(:disabled) {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.14);
+}
+button:disabled {
+  box-shadow: none;
+}
+/* Allow shadow on active / primary buttons */
+button.active,
+button.primary {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.14);
+}
+/* Mode selection buttons (Truck Audit / Quick Scan) */
+.modeBtn {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.14);
+}
+.modeBtn:disabled {
+  box-shadow: none;
+}
+/* Scan button should always look actionable */
+#startScan {
+  box-shadow: 0 7px 21px rgba(0, 0, 0, 0.28);
+}
+/* Truck Audit mode button: always actionable */
+#modeAuditBtn {
+  box-shadow: 0 5px 17px rgba(0, 0, 0, 0.28);
+}
+.reloadWarning{
+  margin-top: 6px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 193, 7, 0.45);
+  background: rgba(255, 193, 7, 0.12);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.15rem;
+}
+.reloadWarning strong{
+  font-weight: 700;
+}
+.reloadWarning{
+  margin-top: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 193, 7, 0.45);
+  background: rgba(255, 193, 7, 0.12);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.1rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dismissWarning{
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 6px;
+}
+.dismissWarning:hover{
+  background: rgba(0,0,0,0.08);
+  border-radius: 6px;
+}
+/* ===== TAU CONSTRUCTION BANNER : BEGIN ===== */
+#tauConstructionBanner{
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+
+  padding: 12px 12px;
+  text-align: center;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+
+  background: repeating-linear-gradient(
+    45deg,
+    #ffc107,
+    #ffc107 12px,
+    #000 12px,
+    #000 24px
+  );
+
+  color: #000;
+  border-bottom: 3px solid #000;
+}
+/* ===== TAU CONSTRUCTION BANNER : END ===== */
+#tauConstructionBanner .tauConstructionLabel{
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  background: #ffc107;
+  border: 2px solid #000;
+  color: #000;
+}
+.loadSuccess {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 8px;
+  color: #1f6feb; /* confident blue */
+}
+.fileBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.fileBtn span {
+  pointer-events: none;
+}
+/* Make the Excel file picker label look like our action buttons */
+label.fileBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px dashed rgba(0,0,0,0.18);
+  background: #ffffff;
+  box-shadow: 0 7px 21px rgba(0, 0, 0, 0.18);
+}
+label.fileBtn span {
+  pointer-events: none;
+  font-weight: 600;
+}
+/* Manual serial input: subtle "this is an input" shadow */
+#manualSerial{
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+/* ===== Last Scanned panel (Step 1d - visual only) ===== */
+
+.lastScanned{
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  margin: 10px 0 12px;
+}
+
+.lastScannedHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin: 0 0 6px;
+}
+
+.lastScannedTitle{
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.lastScannedDismiss{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 18px;
+  line-height: 1;
+  color: #6b7280;
+  cursor: default;
+}
+
+.lastScannedDismiss:disabled{
+  opacity: 0.35;
+}
+
+.lastScannedValue{
+  font-size: 14px;
+  line-height: 1.2;
+  color: #6b7280;
+  padding: 12px 46px 12px 14px; /* right padding for X */
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  width: 100%;
+  display: block;
+}
+/* ===== Last Scanned clear button inside field ===== */
+
+.lastScannedField{
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lastScannedCheck{
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1;
+  color: #16a34a !important; /* force green */
+  flex: 0 0 auto;
+}
+
+.lastScannedClear{
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+
+  font-size: 16px;
+  line-height: 1;
+
+  color: #6b7280;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Prevent banner show/hide from shifting the camera */
+.banner {
+  min-height: 56px;            /* reserves space so the video doesn't move */
+}
+
+/* Override the HTML hidden behavior (normally display:none) */
+.banner[hidden] {
+  display: block;
+  visibility: hidden;
+}
+/* ==== Banner final override (compact + no layout shift) ==== */
+#banner.banner{
+  min-height: 28px !important;
+  padding: 6px 10px !important;
+  font-size: 0.85rem !important;
+  line-height: 1.2 !important;
+  margin: 0 0 10px 0 !important; /* small space below */
+}
+
+#banner.banner[hidden]{
+  display: block !important;
+  visibility: hidden !important;
+}
