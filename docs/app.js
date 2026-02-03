@@ -359,22 +359,20 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
     window.prompt('Copy this:', txt);
   }
 }
-  // Export button
-  function updateExportButtonState() {
+// Export button (Auditor export = Missing ONLY)
+function updateExportButtonState() {
   const btn = document.getElementById('exportCsv');
   if (!btn) return;
 
-  // Enable export if there is anything meaningful to export.
-  // In this app:
-  // - scanned = Set of found serials
-  // - extras  = Set of extra serials
-  // - in audit mode, expected.size > 0 means there is a loaded inventory list (missing can be derived)
-  const hasData =
-    (scanned && scanned.size > 0) ||
-    (extras && extras.size > 0) ||
-    (mode === 'audit' && expected && expected.size > 0);
+  // Auditor export only makes sense in Audit mode (Excel uploaded),
+  // and only when there is at least 1 Missing serial to export.
+  if (mode !== 'audit' || !expected || expected.size === 0) {
+    btn.disabled = true;
+    return;
+  }
 
-  btn.disabled = !hasData;
+  regenerateMissingQueue(); // keep missingQueue fresh
+  btn.disabled = !(missingQueue && missingQueue.length > 0);
 }
 
   function onSerialScanned(raw){
@@ -916,119 +914,102 @@ if(dismissLastScannedBtn){
 // Initialize the UI on load
 renderLastScannedUI();
 
-  const exportBtn = document.getElementById('exportCsv');
+const exportBtn = document.getElementById('exportCsv');
 
 if (exportBtn) {
   exportBtn.addEventListener('click', () => {
     if (exportBtn.disabled) return;
 
-    const techName = window.prompt('Tech name (required):', '');
-    if (!techName || !techName.trim()) return;
-
-    const d = new Date();  // MM/DD/YYYY
-const auditDate =
-  String(d.getMonth() + 1).padStart(2, '0') + '/' +
-  String(d.getDate()).padStart(2, '0') + '/' +
-  d.getFullYear();
-
-  // Build rows: Tech Name, Audit Date, Status, Serial, Part
-const rows = [];
-rows.push(['Tech Name','Audit Date','Serial','Part','Quality','Last Date','Status']);
-
-const tech = techName.trim();
-
-// Part lookup (only available when Excel is loaded in audit mode)
-const partFor = (serial) => {
-  if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
-    return expected.get(serial)?.part || '';
-  }
-  return '';
-};
-    
-const qualityFor = (serial) => {
-  if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
-    return expected.get(serial)?.quality || '';
-  }
-  return '';
-};
-
-const lastDateFor = (serial) => {
-  if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
-    return expected.get(serial)?.lastDate || '';
-  }
-  return '';
-};
-
-// Found
-const foundSerials = (mode === 'audit' && expected && expected.size > 0)
-  ? Array.from(scanned).filter(s => expected.has(s)).sort()
-  : Array.from(scanned).sort();
-
-for (const s of foundSerials) {
-  rows.push([tech, auditDate, s, partFor(s), qualityFor(s), lastDateFor(s), 'Found']);
-}
-
-// Missing (only meaningful in audit mode)
-if (mode === 'audit') {
-  regenerateMissingQueue(); // ensure it's up to date
-  for (const s of (missingQueue || [])) {
-    rows.push([tech, auditDate, s, partFor(s), qualityFor(s), lastDateFor(s), 'Missing']);
-  }
-}
-
-// Extra (only meaningful in audit mode; in quick mode extras is typically empty)
-for (const s of Array.from(extras || []).sort()) {
-  rows.push([tech, auditDate, s, '', '', '', 'Extra']);
-}
-
-// CSV encode
-const esc = (v) => {
-  const s = String(v ?? '');
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-};
-
-const csv = rows.map(r => r.map(esc).join(',')).join('\n');
-
-// Share (preferred on phones), otherwise download
-const safeDate = new Date().toISOString().slice(0,10); // YYYY-MM-DD for filename
-const safeTech = tech.replace(/[^A-Za-z0-9_-]+/g, '_');
-const filename = `TAU_Audit_${safeDate}_${safeTech}.csv`;
-
-const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-
-// Try native share sheet first (iOS/Android support varies)
-(async () => {
-  try {
-    const file = new File([blob], filename, { type: 'text/csv' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-      await navigator.share({
-        files: [file],
-        title: 'Truck Audit Utility Export',
-        text: 'TAU export CSV'
-      });
-      setBanner('ok', 'Share sheet opened');
+    // Auditor export only works in Audit mode with an uploaded Excel
+    if (mode !== 'audit' || !expected || expected.size === 0) {
+      setBanner('warn', 'Upload an Excel file to export missing items.');
+      updateExportButtonState();
       return;
     }
-  } catch (e) {
-    // If share fails, fall back to download
-  }
 
-  // Fallback: download
-  const url = URL.createObjectURL(blob);
+    // Make sure Missing is current
+    regenerateMissingQueue();
 
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+    // Only export Missing
+    if (!missingQueue || missingQueue.length === 0) {
+      setBanner('warn', 'No missing items to export.');
+      updateExportButtonState();
+      return;
+    }
 
-  setBanner('ok', 'CSV downloaded');
+    const techName = window.prompt('Technician name (required):', '');
+    if (!techName || !techName.trim()) return;
 
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-})();
+    const contractorName = window.prompt('Contractor / Garage (required):', '');
+    if (!contractorName || !contractorName.trim()) return;
 
+    // Date (MM/DD/YYYY)
+    const d = new Date();
+    const auditDate =
+      String(d.getMonth() + 1).padStart(2, '0') + '/' +
+      String(d.getDate()).padStart(2, '0') + '/' +
+      d.getFullYear();
+
+    // Auditor CSV columns:
+    // Date, Technician Name, Contractor Name, Serial Number, Equipment Status, Notes
+    const rows = [];
+    rows.push(['Date','Technician Name','Contractor Name','Serial Number','Equipment Status','Notes']);
+
+    const tech = techName.trim();
+    const contractor = contractorName.trim();
+
+    // Missing-only export; status intentionally set to Installed
+    for (const s of missingQueue) {
+      rows.push([auditDate, tech, contractor, s, 'Installed', '']);
+    }
+
+    // CSV encode
+    const esc = (v) => {
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const csv = rows.map(r => r.map(esc).join(',')).join('\n');
+
+    // Filename
+    const safeDate = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+    const safeTech = tech.replace(/[^A-Za-z0-9_-]+/g, '_');
+    const safeContractor = contractor.replace(/[^A-Za-z0-9_-]+/g, '_');
+    const filename = `TAU_Auditor_${safeDate}_${safeTech}_${safeContractor}.csv`;
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+    // Try native share sheet first, otherwise download
+    (async () => {
+      try {
+        const file = new File([blob], filename, { type: 'text/csv' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+          await navigator.share({
+            files: [file],
+            title: 'TAU Auditor Export',
+            text: 'Missing-only auditor CSV'
+          });
+          setBanner('ok', 'Share sheet opened');
+          return;
+        }
+      } catch (e) {
+        // share failed → fall back to download
+      }
+
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setBanner('ok', 'CSV downloaded');
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    })();
   });
 }
 
