@@ -275,25 +275,15 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
     missingQueue = missing;
   }
 
-  function updateUI(){
-    updateCounts();
-      // Update per-box counters
-  if (foundCount) {
-    foundCount.textContent = `(${scanned.size})`;
+ function updateUI(){
+  if (mode === 'audit') {
+    regenerateMissingQueue();
+  } else {
+    missingQueue = [];
   }
 
-  if (extraCount) {
-    extraCount.textContent = `(${extras.size})`;
-  }
-
-  if (missingCount) {
-    if (mode === 'audit') {
-      missingCount.textContent = `(${missingQueue.length})`;
-    } else {
-      missingCount.textContent = '(—)';
-    }
-  }
-
+  updateCounts();
+}
 
     copyAllScanned.disabled = scanned.size === 0;
 
