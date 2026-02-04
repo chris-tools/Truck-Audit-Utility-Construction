@@ -1011,7 +1011,7 @@ if (exportBtn) {
     const safeTech = tech.replace(/[^A-Za-z0-9_-]+/g, '_');
     const safeContractor = contractor.replace(/[^A-Za-z0-9_-]+/g, '_');
     const filename = `TAU_Auditor_${safeDate}_${safeTech}_${safeContractor}.csv`;
-    debugShareCaps();
+    
     await shareOrDownloadCsv(csv, filename);
 
   });
