@@ -914,29 +914,27 @@ if(dismissLastScannedBtn){
 // Initialize the UI on load
 renderLastScannedUI();
 
-  async function shareOrDownloadCsv(csvText, filename) {
+async function shareOrDownloadCsv(csvText, filename) {
   const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
 
-  try {
-    if (navigator.share) {
+  // Try Share Sheet first (iOS-friendly: attempt share even if canShare is absent/finicky)
+  if (navigator.share) {
+    try {
       const file = new File([blob], filename, { type: 'text/csv;charset=utf-8' });
 
-      const canShareFiles =
-        !navigator.canShare || navigator.canShare({ files: [file] });
+      await navigator.share({
+        files: [file],
+        title: filename,
+        text: 'TAU export',
+      });
 
-      if (canShareFiles) {
-        await navigator.share({
-          files: [file],
-          title: filename,
-          text: 'TAU export',
-        });
-        return 'share';
-      }
+      return 'share';
+    } catch (e) {
+      // user cancel or iOS blocks → fall through to download
     }
-  } catch (e) {
-    // fallback happens below
   }
 
+  // Fallback: download
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -948,6 +946,7 @@ renderLastScannedUI();
 
   return 'download';
 }
+
 
 
 const exportBtn = document.getElementById('exportCsv');
