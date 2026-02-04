@@ -953,7 +953,7 @@ if (exportBtn) {
     // Auditor CSV columns:
     // Date, Technician Name, Contractor Name, Serial Number, Equipment Status, Notes
     const rows = [];
-    rows.push(['Date','Technician Name','Contractor Name of Garage','Serial Number','Equipment Status','Notes']);
+    rows.push(['Date','Technician Name','Contractor Name or Garage','Serial Number','Equipment Status','Notes']);
 
     const tech = techName.trim();
     const contractor = contractorName.trim();
