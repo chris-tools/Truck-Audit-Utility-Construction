@@ -31,18 +31,15 @@
   </header>
 
   <main class="container">
-    
-<section class="card">
-  <h2>1) Choose a mode</h2>
-
-     <div class="audit-user-card">
+<!-- ===== Tech Contractor box ===== -->
+ <div class="audit-user-card">
   <div class="audit-user-grid">
     <div class="audit-user-field">
       <label for="techNameField">Technician Name</label>
       <input
         id="techNameField"
         type="text"
-        placeholder="Technician Name (required)"
+        placeholder="(required)"
         autocomplete="name"
       >
     </div>
@@ -52,7 +49,7 @@
       <input
         id="contractorField"
         type="text"
-        placeholder="Contractor / Garage (required)"
+        laceholder="(required)"
         autocomplete="organization"
       >
     </div>
@@ -60,7 +57,11 @@
 </div>
 
 
-        <button id="modeAuditBtn" class="primary">Truck Audit (Upload Excel)</button>
+    
+<section class="card">
+  <h2>1) Choose a mode</h2>
+
+            <button id="modeAuditBtn" class="primary">Truck Audit (Upload Excel)</button>
         <button id="modeQuickBtn" class="secondary">Quick Scan (No Excel)</button>
       </div>
       <p class="hint">Works offline <em>after</em> the first load. For best results, keep the correction form open in another tab.</p>
