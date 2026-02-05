@@ -240,9 +240,19 @@
     </footer>
   </main>
 
-  <!-- Libs (local, cached by service worker after first load) -->
+    <!-- Libs (local, cached by service worker after first load) -->
   <script src="xlsx.full.min.js"></script>
   <script src="zxing-browser.min.js"></script>
   <script src="app.js?v=20260120a"></script>
+
+  <!-- 🚧 Construction-only: disable service worker caching -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(reg => reg.unregister());
+      });
+    }
+  </script>
+  <!-- 🚧 Construction-only: disable service worker caching -->
 </body>
 </html>
