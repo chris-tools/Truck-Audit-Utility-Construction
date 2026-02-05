@@ -973,11 +973,9 @@ if (exportBtn) {
       return;
     }
 
-    const techName = window.prompt('Technician name (required):', '');
-    if (!techName || !techName.trim()) return;
+    const techName = techNameField.value.trim();
+    const contractorName = contractorField.value.trim();
 
-    const contractorName = window.prompt('CONTRACTOR FIRM NAME or GARAGE (required):', '');
-    if (!contractorName || !contractorName.trim()) return;
 
     // Date (MM/DD/YYYY)
     const d = new Date();
