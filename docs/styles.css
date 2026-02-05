@@ -477,3 +477,29 @@ main.container{
     width: 100%;
   }
 }
+/* Copy + Export layout cleanup */
+.copyRow{
+  margin-top: 10px;
+}
+
+.exportCard{
+  margin-top: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+/* Make the export buttons feel less huge on desktop */
+@media (min-width: 700px){
+  .exportCard .bigAction{
+    min-width: 220px;
+    font-size: 16px;
+    padding: 12px 14px;
+  }
+}
+
+/* On phones, keep export buttons full-width and clean */
+@media (max-width: 520px){
+  .exportCard .bigAction{
+    width: 100%;
+  }
+}
