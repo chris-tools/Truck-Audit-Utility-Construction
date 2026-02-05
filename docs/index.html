@@ -35,14 +35,30 @@
 <section class="card">
   <h2>1) Choose a mode</h2>
 
-      <div class="modeRow">
-        <div class="audit-user-info">
-  <label for="techNameField"><strong>Technician Name</strong> (required)</label>
-  <input id="techNameField" type="text" placeholder="Type technician name" autocomplete="name">
+     <div class="audit-user-card">
+  <div class="audit-user-grid">
+    <div class="audit-user-field">
+      <label for="techNameField">Technician Name</label>
+      <input
+        id="techNameField"
+        type="text"
+        placeholder="Technician Name (required)"
+        autocomplete="name"
+      >
+    </div>
 
-  <label for="contractorField" style="margin-top:8px;"><strong>Contractor / Garage</strong> (required)</label>
-  <input id="contractorField" type="text" placeholder="Type contractor firm or garage" autocomplete="organization">
+    <div class="audit-user-field">
+      <label for="contractorField">Contractor / Garage</label>
+      <input
+        id="contractorField"
+        type="text"
+        placeholder="Contractor / Garage (required)"
+        autocomplete="organization"
+      >
+    </div>
+  </div>
 </div>
+
 
         <button id="modeAuditBtn" class="primary">Truck Audit (Upload Excel)</button>
         <button id="modeQuickBtn" class="secondary">Quick Scan (No Excel)</button>
