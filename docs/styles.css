@@ -433,3 +433,9 @@ label.fileBtn span {
 .card{
   overflow: visible !important;
 }
+/* Give the main content a slightly tinted background so card shadows are visible */
+main.container{
+  background: rgba(11, 42, 111, 0.04);
+  border-radius: 18px;
+  padding: 12px;
+}
