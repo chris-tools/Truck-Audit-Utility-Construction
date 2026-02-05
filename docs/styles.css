@@ -429,3 +429,7 @@ label.fileBtn span {
 .audit-user-field input:focus{
   border-color: rgba(0,0,0,0.35);
 }
+/* Allow inner card shadows to render (prevents shadow clipping) */
+.card{
+  overflow: visible !important;
+}
