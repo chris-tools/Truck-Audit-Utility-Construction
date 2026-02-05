@@ -395,7 +395,7 @@ label.fileBtn span {
   border-radius: 16px;
   padding: 14px 14px 12px 14px;
   margin: 10px 0 14px 0;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
 }
 
 .audit-user-grid{
