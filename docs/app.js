@@ -364,16 +364,17 @@ function updateExportButtonState() {
   const btn = document.getElementById('exportCsv');
   if (!btn) return;
 
-  // Auditor export only makes sense in Audit mode (Excel uploaded),
-  // and only when there is at least 1 Missing serial to export.
-  if (mode !== 'audit' || !expected || expected.size === 0) {
-    btn.disabled = true;
-    return;
-  }
+  const hasExpected = expected && expected.size > 0;
 
   regenerateMissingQueue(); // keep missingQueue fresh
-  btn.disabled = !(missingQueue && missingQueue.length > 0);
+  const hasMissing = missingQueue && missingQueue.length > 0;
+
+  const hasTech = techNameField && techNameField.value.trim().length > 0;
+  const hasContractor = contractorField && contractorField.value.trim().length > 0;
+
+  btn.disabled = !(mode === 'audit' && hasExpected && hasMissing && hasTech && hasContractor);
 }
+
 
   function onSerialScanned(raw){
     const s = normalizeSerial(raw);
