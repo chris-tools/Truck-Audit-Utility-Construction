@@ -503,9 +503,17 @@ main.container{
     width: 100%;
   }
 }
-/* Mobile: give Copy buttons more breathing room */
+
+/* Mobile: keep Copy buttons side-by-side with real spacing */
 @media (max-width: 520px){
   .copyRow{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
+    align-items: stretch;
+  }
+
+  .copyRow button{
+    width: 100%;
   }
 }
