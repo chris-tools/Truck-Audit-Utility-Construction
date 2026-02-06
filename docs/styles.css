@@ -503,3 +503,9 @@ main.container{
     width: 100%;
   }
 }
+/* Mobile: give Copy buttons more breathing room */
+@media (max-width: 520px){
+  .copyRow{
+    gap: 12px;
+  }
+}
