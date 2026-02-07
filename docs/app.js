@@ -359,21 +359,22 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
     window.prompt('Copy this:', txt);
   }
 }
-// Export button (Auditor export = Missing ONLY)
+// Export button
 function updateExportButtonState() {
-  const btn = document.getElementById('exportCsv');
-  if (!btn) return;
+  const exportAuditBtn = document.getElementById('exportCsv');
+  const exportFullBtn  = document.getElementById('exportFullCsv');
 
   const hasExpected = expected && expected.size > 0;
-
-  regenerateMissingQueue(); // keep missingQueue fresh
-  const hasMissing = missingQueue && missingQueue.length > 0;
 
   const hasTech = techNameField && techNameField.value.trim().length > 0;
   const hasContractor = contractorField && contractorField.value.trim().length > 0;
 
-  btn.disabled = !(mode === 'audit' && hasExpected && hasMissing && hasTech && hasContractor);
+  const canExport = (mode === 'audit' && hasExpected && hasTech && hasContractor);
+
+  if (exportAuditBtn) exportAuditBtn.disabled = !canExport;
+  if (exportFullBtn)  exportFullBtn.disabled  = !canExport;
 }
+
 
 
   function onSerialScanned(raw){
@@ -965,13 +966,6 @@ if (exportBtn) {
 
     // Make sure Missing is current
     regenerateMissingQueue();
-
-    // Only export Missing
-    if (!missingQueue || missingQueue.length === 0) {
-      setBanner('warn', 'No missing items to export.');
-      updateExportButtonState();
-      return;
-    }
 
     const techName = techNameField.value.trim();
     const contractorName = contractorField.value.trim();
