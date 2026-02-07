@@ -106,6 +106,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
 }
 
 .scanControls{align-items:stretch}
+/* Mobile spacing: prevent Scan + Finished crowding */
+@media (max-width: 520px){
+  .scanControls{
+    gap: 12px;              /* vertical space between buttons */
+  }
+
+  #startScan{
+    margin-bottom: 6px;     /* breathing room above Finished */
+  }
+}
+
 .bigAction{flex:1;min-width:180px;font-size:18px;padding:16px 18px}
 
 /* Light button lives on white cards, so override the generic "ghost" styling used in the blue header */
