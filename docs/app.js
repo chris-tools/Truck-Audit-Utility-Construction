@@ -563,6 +563,7 @@ function formatExcelDateCell(v) {
       `Loaded sheet “${sheetName}”. Expected serials: ${expected.size}.`;
 
     updateUI();
+    updateExportButtonState();
   } catch(e){
     expectedSummary.textContent = 'Could not read Excel: ' + e.message;
   }
