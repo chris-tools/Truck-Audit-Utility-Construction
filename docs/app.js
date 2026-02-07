@@ -11,6 +11,8 @@
   const serialCol = $('serialCol');
   const partCol = $('partCol');
   const expectedSummary = $('expectedSummary');
+  const techNameField = $('techNameField');
+  const contractorField = $('contractorField');
 
   const startScan = $('startScan');
   const stopScan = $('stopScan');
@@ -359,7 +361,18 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
     window.prompt('Copy this:', txt);
   }
 }
-// Export button
+
+  function updateModeButtonsState() {
+  const hasTech = techNameField && techNameField.value.trim().length > 0;
+  const hasContractor = contractorField && contractorField.value.trim().length > 0;
+
+  const canChooseMode = hasTech && hasContractor;
+
+  if (modeAuditBtn) modeAuditBtn.disabled = !canChooseMode;
+  if (modeQuickBtn) modeQuickBtn.disabled = !canChooseMode;
+}
+
+  // Export button
 function updateExportButtonState() {
   const exportAuditBtn = document.getElementById('exportCsv');
   const exportFullBtn  = document.getElementById('exportFullCsv');
@@ -1095,4 +1108,21 @@ if(dismissWarningBtn && reloadWarning){
 }
 
 updateExportButtonState();
+
+  updateModeButtonsState();
+
+if (techNameField) {
+  techNameField.addEventListener('input', () => {
+    updateModeButtonsState();
+    updateExportButtonState();
+  });
+}
+
+if (contractorField) {
+  contractorField.addEventListener('input', () => {
+    updateModeButtonsState();
+    updateExportButtonState();
+  });
+}
+
 })();
