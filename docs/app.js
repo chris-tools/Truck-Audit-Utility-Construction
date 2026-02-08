@@ -31,8 +31,7 @@
 
   const copyNextMissing = $('copyNextMissing');
   const copyAllMissing = $('copyAllMissing');
-  const copyAllScanned = $('copyAllScanned');
-
+  
   const missingList = $('missingList');
   const extraList = $('extraList');
   const scannedList = $('scannedList');
@@ -295,9 +294,6 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
       missingCount.textContent = '(—)';
     }
   }
-
-
-    copyAllScanned.disabled = scanned.size === 0;
 
     if(mode === 'audit'){
       regenerateMissingQueue();
@@ -839,14 +835,6 @@ armDelayId = setTimeout(()=>{
       addManual.click();
     }
   });
-
-  copyAllScanned.addEventListener('click', (e)=>{
-  e.preventDefault();
-  e.stopPropagation();
- 
-  const arr = Array.from(scanned).sort();
-  copyText(arr.join('\n'));
-});
 
   if(copyAllMissing){
   copyAllMissing.addEventListener('click', ()=>{
