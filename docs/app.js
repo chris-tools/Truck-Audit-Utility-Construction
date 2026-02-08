@@ -31,7 +31,8 @@
 
   const copyNextMissing = $('copyNextMissing');
   const copyAllMissing = $('copyAllMissing');
-  
+  const copyAllScanned = $('copyAllScanned');
+
   const missingList = $('missingList');
   const extraList = $('extraList');
   const scannedList = $('scannedList');
@@ -294,6 +295,9 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
       missingCount.textContent = '(—)';
     }
   }
+
+
+    if (copyAllScanned) copyAllScanned.disabled = scanned.size === 0;
 
     if(mode === 'audit'){
       regenerateMissingQueue();
@@ -836,6 +840,17 @@ armDelayId = setTimeout(()=>{
     }
   });
 
+ if (copyAllScanned) {
+  copyAllScanned.addEventListener('click', (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+
+    const arr = Array.from(scanned).sort();
+    copyText(arr.join('\n'));
+  });
+}
+
+
   if(copyAllMissing){
   copyAllMissing.addEventListener('click', ()=>{
     if(mode !== 'audit') return;
@@ -1233,20 +1248,25 @@ if (exportFullBtn) {
   });
 }
 
-  // PWA install hint
+   // PWA install hint
   let deferredPrompt = null;
   const installBtn = $('installBtn');
+
   window.addEventListener('beforeinstallprompt', (e)=>{
     e.preventDefault();
     deferredPrompt = e;
-    installBtn.hidden = false;
+    if (installBtn) installBtn.hidden = false;
   });
-  installBtn.addEventListener('click', async ()=>{
-    if(!deferredPrompt) return;
-    deferredPrompt.prompt();
-    deferredPrompt = null;
-    installBtn.hidden = true;
-  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async ()=>{
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt = null;
+      installBtn.hidden = true;
+    });
+  }
+
 // Safety net: if the user navigates away / backgrounds the app, release the camera
 window.addEventListener('pagehide', ()=>{ stopCamera(); });
 document.addEventListener('visibilitychange', ()=>{
