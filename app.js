@@ -11,6 +11,8 @@
   const serialCol = $('serialCol');
   const partCol = $('partCol');
   const expectedSummary = $('expectedSummary');
+  const techNameField = $('techNameField');
+  const contractorField = $('contractorField');
 
   const startScan = $('startScan');
   const stopScan = $('stopScan');
@@ -295,7 +297,7 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
   }
 
 
-    copyAllScanned.disabled = scanned.size === 0;
+    if (copyAllScanned) copyAllScanned.disabled = scanned.size === 0;
 
     if(mode === 'audit'){
       regenerateMissingQueue();
@@ -359,23 +361,40 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
     window.prompt('Copy this:', txt);
   }
 }
-  // Export button
-  function updateExportButtonState() {
-  const btn = document.getElementById('exportCsv');
-  if (!btn) return;
 
-  // Enable export if there is anything meaningful to export.
-  // In this app:
-  // - scanned = Set of found serials
-  // - extras  = Set of extra serials
-  // - in audit mode, expected.size > 0 means there is a loaded inventory list (missing can be derived)
-  const hasData =
-    (scanned && scanned.size > 0) ||
-    (extras && extras.size > 0) ||
-    (mode === 'audit' && expected && expected.size > 0);
+  function updateModeButtonsState() {
+  const hasTech = techNameField && techNameField.value.trim().length > 0;
+  const hasContractor = contractorField && contractorField.value.trim().length > 0;
 
-  btn.disabled = !hasData;
+  const canChooseMode = hasTech && hasContractor;
+
+  if (modeAuditBtn) modeAuditBtn.disabled = !canChooseMode;
+  if (modeQuickBtn) modeQuickBtn.disabled = !canChooseMode;
 }
+
+  // Export button
+function updateExportButtonState() {
+  const exportAuditBtn = document.getElementById('exportCsv');
+  const exportFullBtn  = document.getElementById('exportFullCsv');
+
+  const hasExpected = expected && expected.size > 0;
+  const hasScans = scanned && scanned.size > 0;
+
+  const hasTech = techNameField && techNameField.value.trim().length > 0;
+  const hasContractor = contractorField && contractorField.value.trim().length > 0;
+
+  // Export Audit Results (your existing audit export)
+  // Keep this strict: audit mode + excel + tech + contractor
+  const canExportAudit = (mode === 'audit' && hasExpected && hasTech && hasContractor);
+
+  // Export Full Report (Reference)
+  // Works if tech+contractor AND (excel imported OR at least one scan)
+  const canExportFull = (hasTech && hasContractor && (hasExpected || hasScans));
+
+  if (exportAuditBtn) exportAuditBtn.disabled = !canExportAudit;
+  if (exportFullBtn)  exportFullBtn.disabled  = !canExportFull;
+}
+
 
   function onSerialScanned(raw){
     const s = normalizeSerial(raw);
@@ -563,6 +582,7 @@ function formatExcelDateCell(v) {
       `Loaded sheet “${sheetName}”. Expected serials: ${expected.size}.`;
 
     updateUI();
+    updateExportButtonState();
   } catch(e){
     expectedSummary.textContent = 'Could not read Excel: ' + e.message;
   }
@@ -820,13 +840,16 @@ armDelayId = setTimeout(()=>{
     }
   });
 
+ if (copyAllScanned) {
   copyAllScanned.addEventListener('click', (e)=>{
-  e.preventDefault();
-  e.stopPropagation();
- 
-  const arr = Array.from(scanned).sort();
-  copyText(arr.join('\n'));
-});
+    e.preventDefault();
+    e.stopPropagation();
+
+    const arr = Array.from(scanned).sort();
+    copyText(arr.join('\n'));
+  });
+}
+
 
   if(copyAllMissing){
   copyAllMissing.addEventListener('click', ()=>{
@@ -916,137 +939,334 @@ if(dismissLastScannedBtn){
 // Initialize the UI on load
 renderLastScannedUI();
 
-  const exportBtn = document.getElementById('exportCsv');
+async function shareOrDownloadCsv(csvText, filename) {
+  const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
 
-if (exportBtn) {
-  exportBtn.addEventListener('click', () => {
-    if (exportBtn.disabled) return;
+  // Try Share Sheet first (iOS-friendly: attempt share even if canShare is absent/finicky)
+  if (navigator.share) {
+    try {
+      const file = new File([blob], filename, { type: 'text/csv;charset=utf-8' });
 
-    const techName = window.prompt('Tech name (required):', '');
-    if (!techName || !techName.trim()) return;
-
-    const d = new Date();  // MM/DD/YYYY
-const auditDate =
-  String(d.getMonth() + 1).padStart(2, '0') + '/' +
-  String(d.getDate()).padStart(2, '0') + '/' +
-  d.getFullYear();
-
-  // Build rows: Tech Name, Audit Date, Status, Serial, Part
-const rows = [];
-rows.push(['Tech Name','Audit Date','Serial','Part','Quality','Last Date','Status']);
-
-const tech = techName.trim();
-
-// Part lookup (only available when Excel is loaded in audit mode)
-const partFor = (serial) => {
-  if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
-    return expected.get(serial)?.part || '';
-  }
-  return '';
-};
-    
-const qualityFor = (serial) => {
-  if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
-    return expected.get(serial)?.quality || '';
-  }
-  return '';
-};
-
-const lastDateFor = (serial) => {
-  if (mode === 'audit' && expected && expected.size > 0 && expected.has(serial)) {
-    return expected.get(serial)?.lastDate || '';
-  }
-  return '';
-};
-
-// Found
-const foundSerials = (mode === 'audit' && expected && expected.size > 0)
-  ? Array.from(scanned).filter(s => expected.has(s)).sort()
-  : Array.from(scanned).sort();
-
-for (const s of foundSerials) {
-  rows.push([tech, auditDate, s, partFor(s), qualityFor(s), lastDateFor(s), 'Found']);
-}
-
-// Missing (only meaningful in audit mode)
-if (mode === 'audit') {
-  regenerateMissingQueue(); // ensure it's up to date
-  for (const s of (missingQueue || [])) {
-    rows.push([tech, auditDate, s, partFor(s), qualityFor(s), lastDateFor(s), 'Missing']);
-  }
-}
-
-// Extra (only meaningful in audit mode; in quick mode extras is typically empty)
-for (const s of Array.from(extras || []).sort()) {
-  rows.push([tech, auditDate, s, '', '', '', 'Extra']);
-}
-
-// CSV encode
-const esc = (v) => {
-  const s = String(v ?? '');
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-};
-
-const csv = rows.map(r => r.map(esc).join(',')).join('\n');
-
-// Share (preferred on phones), otherwise download
-const safeDate = new Date().toISOString().slice(0,10); // YYYY-MM-DD for filename
-const safeTech = tech.replace(/[^A-Za-z0-9_-]+/g, '_');
-const filename = `TAU_Audit_${safeDate}_${safeTech}.csv`;
-
-const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-
-// Try native share sheet first (iOS/Android support varies)
-(async () => {
-  try {
-    const file = new File([blob], filename, { type: 'text/csv' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
       await navigator.share({
         files: [file],
-        title: 'Truck Audit Utility Export',
-        text: 'TAU export CSV'
+        title: filename,
+        text: 'TAU export',
       });
-      setBanner('ok', 'Share sheet opened');
-      return;
+
+      return 'share';
+    } catch (e) {
+      // user cancel or iOS blocks → fall through to download
     }
-  } catch (e) {
-    // If share fails, fall back to download
   }
 
   // Fallback: download
   const url = URL.createObjectURL(blob);
-
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
-
-  setBanner('ok', 'CSV downloaded');
-
+  a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-})();
+
+  return 'download';
+}
+
+
+
+const exportBtn = document.getElementById('exportCsv');
+
+if (exportBtn) {
+  exportBtn.addEventListener('click', async () => {
+    if (exportBtn.disabled) return;
+
+    // Auditor export only works in Audit mode with an uploaded Excel
+    if (mode !== 'audit' || !expected || expected.size === 0) {
+      setBanner('warn', 'Upload an Excel file to export missing items.');
+      updateExportButtonState();
+      return;
+    }
+
+    // Make sure Missing is current
+    regenerateMissingQueue();
+
+    const techName = techNameField.value.trim();
+    const contractorName = contractorField.value.trim();
+
+
+    // Date (MM/DD/YYYY)
+    const d = new Date();
+    const auditDate =
+      String(d.getMonth() + 1).padStart(2, '0') + '/' +
+      String(d.getDate()).padStart(2, '0') + '/' +
+      d.getFullYear();
+
+    // Auditor CSV columns:
+    // Date, Technician Name, Contractor Name, Serial Number, Equipment Status, Notes
+    const rows = [];
+    rows.push(['Date','Technician Name','Contractor Name or Garage','Serial Number','Equipment Status','Notes']);
+
+    const tech = techName.trim();
+    const contractor = contractorName.trim();
+
+    // Missing-only export; status intentionally set to Installed
+    for (const s of missingQueue) {
+      rows.push([auditDate, tech, contractor, s, 'Installed', '']);
+    }
+
+    // CSV encode
+    const esc = (v) => {
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const csv = rows.map(r => r.map(esc).join(',')).join('\n');
+
+    // Filename
+    const safeDate = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+    const safeTech = tech.replace(/[^A-Za-z0-9_-]+/g, '_');
+    const safeContractor = contractor.replace(/[^A-Za-z0-9_-]+/g, '_');
+    const filename = `TAU_Auditor_${safeDate}_${safeTech}_${safeContractor}.csv`;
+    
+    await shareOrDownloadCsv(csv, filename);
 
   });
 }
 
+// ===============================
+// Full Report export (XLSX + formatted)
+// ===============================
 
-  // PWA install hint
+function mmddyyyy(d){
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const yy = d.getFullYear();
+  return `${mm}-${dd}-${yy}`;
+}
+
+function safeNameForFile(s){
+  return String(s || '')
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^A-Za-z0-9_-]/g, '');
+}
+
+function buildFullReportRows() {
+  const now = new Date();
+  const auditDate = mmddyyyy(now);
+
+  const tech = (window.techNameField?.value || '').trim();
+  const contractor = (window.contractorField?.value || '').trim();
+
+  const rows = [];
+  rows.push([
+    'Date',
+    'Technician Name',
+    'Contract Company / Garage',
+    'Serial',
+    'Part',
+    'Quality',
+    'Last Date'
+  ]);
+
+  // Helper to push a row
+  function pushRow(serial, qualityLabel) {
+    const rec = expected?.get(serial);
+    const part = rec?.part || '';
+    const lastDate = rec?.lastDate || '';
+
+    rows.push([
+      auditDate,
+      tech,
+      contractor,
+      serial,
+      part,
+      qualityLabel,
+      lastDate
+    ]);
+  }
+
+  // If Excel is loaded (audit mode with expected list), we can compute Found/Missing/Extra.
+  const hasExpected = expected && expected.size > 0;
+
+  if (hasExpected) {
+    // Found = scanned ∩ expected
+    const found = Array.from(scanned).filter(s => expected.has(s));
+
+    // Missing = expected \ scanned \ handledMissing (matches your current queue logic)
+    regenerateMissingQueue();
+    const missing = Array.from(missingQueue);
+
+    // Extra = scanned \ expected (you already track extras)
+    const extra = Array.from(extras);
+
+    // Sort by serial
+    found.sort();
+    missing.sort();
+    extra.sort();
+
+    for (const s of found)  pushRow(s, 'Found');
+    for (const s of missing) pushRow(s, 'Missing');
+
+    // Extras: Part/Last Date blank automatically since not in expected
+    for (const s of extra) {
+      rows.push([auditDate, tech, contractor, s, '', 'Extra', '']);
+    }
+
+  } else {
+    // Quick Scan mode (or audit mode with no Excel): everything scanned is "Found"
+    const onlyScanned = Array.from(scanned).sort();
+    for (const s of onlyScanned) {
+      rows.push([auditDate, tech, contractor, s, '', 'Found', '']);
+    }
+  }
+
+  return rows;
+}
+
+function applyFullReportStyles(ws, range) {
+  // NOTE: style rendering depends on the SheetJS build, but we set the styles regardless.
+  const headerFill = { patternType: "solid", fgColor: { rgb: "0B2A6F" } }; // dark blue
+  const headerFont = { color: { rgb: "FFFFFF" }, bold: true };
+
+  const thinBorder = {
+    top:    { style: "thin", color: { rgb: "000000" } },
+    bottom: { style: "thin", color: { rgb: "000000" } },
+    left:   { style: "thin", color: { rgb: "000000" } },
+    right:  { style: "thin", color: { rgb: "000000" } },
+  };
+
+  const decoded = XLSX.utils.decode_range(range);
+
+  for (let R = decoded.s.r; R <= decoded.e.r; ++R) {
+    for (let C = decoded.s.c; C <= decoded.e.c; ++C) {
+      const addr = XLSX.utils.encode_cell({ r: R, c: C });
+      const cell = ws[addr];
+      if (!cell) continue;
+
+      const hasValue = cell.v !== undefined && cell.v !== null && String(cell.v).trim() !== '';
+      if (!hasValue) continue;
+
+      cell.s = cell.s || {};
+      cell.s.border = thinBorder;
+
+      if (R === 0) {
+        cell.s.fill = headerFill;
+        cell.s.font = headerFont;
+        cell.s.alignment = { horizontal: "center", vertical: "center", wrapText: true };
+      } else {
+        cell.s.alignment = { vertical: "center", wrapText: true };
+      }
+    }
+  }
+
+  ws["!rows"] = ws["!rows"] || [];
+  ws["!rows"][0] = { hpt: 18 };
+}
+
+async function exportFullReportXlsx() {
+  const tech = (window.techNameField?.value || '').trim();
+  const contractor = (window.contractorField?.value || '').trim();
+
+  if (!tech || !contractor) {
+    setBanner('warn', 'Enter Technician Name and Contract Company / Garage first.');
+    updateExportButtonState();
+    return;
+  }
+
+  const hasExpected = expected && expected.size > 0;
+  const hasAnyRows =
+    (hasExpected) || (scanned && scanned.size > 0);
+
+  if (!hasAnyRows) {
+    setBanner('warn', 'Scan at least one item (or upload an Excel file) before exporting.');
+    updateExportButtonState();
+    return;
+  }
+
+  const rows = buildFullReportRows();
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Auto-width (reasonable)
+  const colCount = rows[0].length;
+  ws["!cols"] = Array.from({ length: colCount }, (_, c) => {
+    let maxLen = 10;
+    for (let r = 0; r < rows.length; r++) {
+      const v = rows[r][c];
+      const len = String(v ?? '').length;
+      if (len > maxLen) maxLen = len;
+    }
+    return { wch: Math.min(45, maxLen + 2) };
+  });
+
+  const range = XLSX.utils.encode_range({
+    s: { r: 0, c: 0 },
+    e: { r: rows.length - 1, c: colCount - 1 },
+  });
+  applyFullReportStyles(ws, range);
+
+  XLSX.utils.book_append_sheet(wb, ws, "Full Report");
+
+  const out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([out], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  });
+
+  const now = new Date();
+  const filename =
+    `${safeNameForFile(tech)}_${mmddyyyy(now)}_FullReport.xlsx`;
+
+  // Share sheet first, download fallback
+  if (navigator.share) {
+    try {
+      const file = new File([blob], filename, { type: blob.type });
+      await navigator.share({ files: [file], title: filename, text: 'TAU Full Report' });
+      return;
+    } catch (e) {
+      // fall through to download
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Wire the Full Report button
+const exportFullBtn = document.getElementById('exportFullCsv');
+if (exportFullBtn) {
+  exportFullBtn.addEventListener('click', async () => {
+    if (exportFullBtn.disabled) return;
+    await exportFullReportXlsx();
+  });
+}
+
+   // PWA install hint
   let deferredPrompt = null;
   const installBtn = $('installBtn');
+
   window.addEventListener('beforeinstallprompt', (e)=>{
     e.preventDefault();
     deferredPrompt = e;
-    installBtn.hidden = false;
+    if (installBtn) installBtn.hidden = false;
   });
-  installBtn.addEventListener('click', async ()=>{
-    if(!deferredPrompt) return;
-    deferredPrompt.prompt();
-    deferredPrompt = null;
-    installBtn.hidden = true;
-  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async ()=>{
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt = null;
+      installBtn.hidden = true;
+    });
+  }
+
 // Safety net: if the user navigates away / backgrounds the app, release the camera
 window.addEventListener('pagehide', ()=>{ stopCamera(); });
 document.addEventListener('visibilitychange', ()=>{
@@ -1116,4 +1336,21 @@ if(dismissWarningBtn && reloadWarning){
 }
 
 updateExportButtonState();
+
+  updateModeButtonsState();
+
+if (techNameField) {
+  techNameField.addEventListener('input', () => {
+    updateModeButtonsState();
+    updateExportButtonState();
+  });
+}
+
+if (contractorField) {
+  contractorField.addEventListener('input', () => {
+    updateModeButtonsState();
+    updateExportButtonState();
+  });
+}
+
 })();
