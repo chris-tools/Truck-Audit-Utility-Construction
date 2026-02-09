@@ -528,3 +528,10 @@ main.container{
     width: 100%;
   }
 }
+/* Invisible selectable authorship marker */
+.hidden-author-mark{
+  font-size: 1px;
+  color: #ffffff;     /* matches card background */
+  line-height: 0;
+  user-select: text;
+}
