@@ -530,7 +530,7 @@ main.container{
 }
 /* Invisible selectable authorship marker */
 .hidden-author-mark{
-  font-size: 1px;
+  font-size: 5px;
   color: #ffffff;     /* matches card background */
   line-height: 0;
   user-select: text;
