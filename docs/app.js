@@ -463,6 +463,83 @@ function updateExportButtonState() {
     const dataRows = rows.slice(1).filter(r=>r && r.length>0);
     return {sheetName, headers, dataRows};
   }
+  
+  // ===== CSV parsing (for inventory uploads) =====
+function detectCsvDelimiter(firstLine){
+  const comma = (firstLine.match(/,/g) || []).length;
+  const semi  = (firstLine.match(/;/g) || []).length;
+  const tab   = (firstLine.match(/\t/g) || []).length;
+
+  if(tab > comma && tab > semi) return '\t';
+  if(semi > comma) return ';';
+  return ',';
+}
+
+function parseCsvLine(line, delimiter){
+  const out = [];
+  let cur = '';
+  let inQuotes = false;
+
+  for(let i = 0; i < line.length; i++){
+    const ch = line[i];
+
+    if(ch === '"'){
+      // "" inside quotes -> literal "
+      if(inQuotes && line[i+1] === '"'){
+        cur += '"';
+        i++;
+      }else{
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if(!inQuotes && ch === delimiter){
+      out.push(cur.trim());
+      cur = '';
+      continue;
+    }
+
+    cur += ch;
+  }
+
+  out.push(cur.trim());
+  return out;
+}
+
+function findHeaderContaining(headers, needle){
+  const n = String(needle || '').toLowerCase();
+  for(const h of headers){
+    const s = String(h || '').toLowerCase();
+    if(s.includes(n)) return h;
+  }
+  return '';
+}
+
+async function parseCsv(file){
+  const textRaw = await file.text();
+
+  // Remove BOM if present
+  const text = textRaw.replace(/^\uFEFF/, '');
+
+  const lines = text
+    .split(/\r?\n/)
+    .map(l => l.trimEnd())
+    .filter(l => l.trim().length > 0);
+
+  if(lines.length < 2) throw new Error('CSV seems empty (needs a header row + at least 1 data row).');
+
+  const delimiter = detectCsvDelimiter(lines[0]);
+
+  const headers = parseCsvLine(lines[0], delimiter)
+    .map(h => String(h || '').trim())
+    .filter(Boolean);
+
+  const dataRows = lines.slice(1).map(line => parseCsvLine(line, delimiter));
+
+  return { sheetName: 'CSV', headers, dataRows };
+}
+
 
   function loadExpectedFromRows(headers, dataRows, serialHeader, partHeader){
     expected.clear();
@@ -561,10 +638,43 @@ function formatExcelDateCell(v) {
   // STEP 1: detect CSV vs Excel
   const lowerName = String(f.name || '').toLowerCase();
   if (lowerName.endsWith('.csv')) {
-    setBanner('ok', 'CSV detected — (parsing comes next step)');
-    expectedSummary.textContent = 'CSV selected. Next step: import expected serials from CSV.';
-    return; // stop here for now
+  try{
+    const { sheetName, headers, dataRows } = await parseCsv(f);
+
+    // Prefer "Serial No", otherwise any header containing "serial"
+    const serialHeader = headers.includes('Serial No')
+      ? 'Serial No'
+      : (findHeaderContaining(headers, 'serial') ||
+         guessColumn(headers, ['Serial No','Serial','Serial Number','SN']));
+
+    // Part column is optional
+    const partHeader = headers.includes('Part')
+      ? 'Part'
+      : (findHeaderContaining(headers, 'part') ||
+         guessColumn(headers, ['Part','Item','Description']));
+
+    if(!serialHeader){
+      throw new Error('Could not find a Serial column in the CSV.');
+    }
+
+    const partHeaderFinal = headers.includes(partHeader) ? partHeader : '';
+
+    loadExpectedFromRows(headers, dataRows, serialHeader, partHeaderFinal);
+
+    expectedSummary.textContent =
+      `Loaded “${sheetName}”. Expected serials: ${expected.size}.`;
+
+    setBanner('ok', 'CSV loaded');
+    updateUI();
+    updateExportButtonState();
+  } catch(e){
+    expectedSummary.textContent = 'Could not read CSV: ' + e.message;
+    setBanner('bad', 'CSV import failed');
   }
+
+  return; // IMPORTANT: stop here so Excel parser does not run
+}
+
 
   try{
     const {sheetName, headers, dataRows} = await parseExcel(f);
