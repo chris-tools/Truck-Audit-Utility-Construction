@@ -662,7 +662,7 @@ function formatExcelDateCell(v) {
     loadExpectedFromRows(headers, dataRows, serialHeader, partHeaderFinal);
 
     expectedSummary.textContent =
-      `Loaded “${sheetName}”. Expected serials: ${expected.size}.`;
+  `Inventory loaded. Expected serials: ${expected.size}.`;
 
     setBanner('ok', 'CSV loaded');
     updateUI();
@@ -697,8 +697,8 @@ function formatExcelDateCell(v) {
 
     loadExpectedFromRows(headers, dataRows, serialHeader, partHeaderFinal);
 
-    expectedSummary.textContent =
-      `Loaded sheet “${sheetName}”. Expected serials: ${expected.size}.`;
+  expectedSummary.textContent =
+  `Inventory loaded. Expected serials: ${expected.size}.`;
 
     updateUI();
     updateExportButtonState();
