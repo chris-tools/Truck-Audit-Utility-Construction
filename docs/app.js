@@ -552,14 +552,23 @@ function formatExcelDateCell(v) {
   return String(v).trim();
 }
 
-  excelFile.addEventListener('change', async ()=>{
+ excelFile.addEventListener('change', async ()=>{
   const f = excelFile.files && excelFile.files[0];
   if(!f) return;
 
   fileMeta.textContent = f.name;
 
+  // STEP 1: detect CSV vs Excel
+  const lowerName = String(f.name || '').toLowerCase();
+  if (lowerName.endsWith('.csv')) {
+    setBanner('ok', 'CSV detected — (parsing comes next step)');
+    expectedSummary.textContent = 'CSV selected. Next step: import expected serials from CSV.';
+    return; // stop here for now
+  }
+
   try{
     const {sheetName, headers, dataRows} = await parseExcel(f);
+
 
     // Locked column names (no user selection)
     const serialHeader = headers.includes('Serial No')
