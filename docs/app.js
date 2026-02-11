@@ -201,7 +201,7 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
   if(!w || !h) return true;
 
   const cx = w / 2;
-  const cy = h * 0.60;
+  const cy = h * 0.62;
 
   const dx = Math.abs(c.x - cx) / w;
   const dy = Math.abs(c.y - cy) / h;
