@@ -738,6 +738,7 @@ const constraints = {
 
 await scanner.decodeFromConstraints(constraints, video, (result, err)=>{
   if(!result || !armed) return;
+  if(!isCenteredDecode(result, video, 0.18)) return;
 
   const rawText = result.getText();
   let cleaned = normalizeSerial(stripControlChars(rawText));
