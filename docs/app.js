@@ -723,15 +723,17 @@ function formatExcelDateCell(v) {
    scanner = new ZXingBrowser.BrowserMultiFormatReader();
   
     // Ask for a sharper video feed (helps tiny 2D codes a LOT)
+const isAndroid = /Android/i.test(navigator.userAgent);
+
 const constraints = {
   audio: false,
   video: {
     deviceId: deviceId ? { exact: deviceId } : undefined,
     facingMode: deviceId ? undefined : { ideal: 'environment' },
 
-    // High-res request (reliability > battery)
-    width:  { ideal: 1920 },
-    height: { ideal: 1080 },
+    // Samsung focus stability
+    width:  { ideal: 1280 },
+    height: { ideal: 720 },
     frameRate: { ideal: 30, max: 30 }
   }
 };
@@ -792,16 +794,21 @@ cleaned = cleaned.replace(/#/g, '');
         flashBtn.textContent = torchSupported ? 'Flashlight' : 'Flashlight (N/A)';
         flashBtn.classList.remove('on');
 
-        // Default zoom: if the device supports it, gently zoom in to help barcode reading.
-        zoomSupported = typeof caps.zoom === 'object' && caps.zoom !== null;
-        if(zoomSupported){
-          const minZ = Number(caps.zoom.min ?? 1);
-          const maxZ = Number(caps.zoom.max ?? 1);
-          const target = Math.min(maxZ, Math.max(minZ, 2)); // aim for ~2x without exceeding caps
-          try{
-            await streamTrack.applyConstraints({advanced:[{zoom: target}]});
-          }catch(_){/* ignore */}
-        }
+      // Default zoom: iPhone likes ~2x; Samsung/Android often focuses better near 1x.
+zoomSupported = typeof caps.zoom === 'object' && caps.zoom !== null;
+if(zoomSupported){
+  const minZ = Number(caps.zoom.min ?? 1);
+  const maxZ = Number(caps.zoom.max ?? 1);
+
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const desired = isAndroid ? 1.25 : 2;
+
+  const target = Math.min(maxZ, Math.max(minZ, desired));
+
+  try{
+    await streamTrack.applyConstraints({advanced:[{zoom: target}]});
+  }catch(_){/* ignore */}
+}
       }
     }catch(_){}
   }
