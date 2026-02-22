@@ -787,6 +787,29 @@ cleaned = cleaned.replace(/#/g, '');
       if(stream){
         streamTrack = stream.getVideoTracks()[0];
         const caps = streamTrack.getCapabilities ? streamTrack.getCapabilities() : {};
+        // --- Android focus nudge (Samsung fix) ---
+const isAndroid = /Android/i.test(navigator.userAgent);
+
+if (isAndroid && streamTrack && streamTrack.applyConstraints) {
+  try {
+    const adv = [];
+
+    // If the browser exposes focusMode, prefer continuous autofocus
+    if (caps && Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) {
+      adv.push({ focusMode: 'continuous' });
+    }
+
+    // If focusDistance exists, request the closest focus distance (helps barcodes)
+    if (caps && caps.focusDistance && typeof caps.focusDistance.min === 'number') {
+      adv.push({ focusDistance: caps.focusDistance.min });
+    }
+
+    if (adv.length) {
+      await streamTrack.applyConstraints({ advanced: adv });
+    }
+  } catch (_) { /* ignore */ }
+}
+// --- end Android focus nudge ---
         torchSupported = !!caps.torch;
         flashBtn.hidden = false;
         flashBtn.disabled = !torchSupported;
