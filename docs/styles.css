@@ -535,3 +535,11 @@ main.container{
   line-height: 0;
   user-select: text;
 }
+/* App Footer (RTU + TAU unified style) */
+.app-footer {
+  font-size: 12px;          /* slightly smaller, professional */
+  color: #6b7280;           /* medium grey */
+  text-align: center;
+  margin-top: 18px;
+  opacity: 0.9;
+}
