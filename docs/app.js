@@ -816,9 +816,6 @@ function formatExcelDateCell(v) {
     await ensureVideoPermissionOnce();
     const devices = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
 
-// Prefer the best rear camera (helps Samsung/Chrome avoid the ultra-wide lens)
-const isAndroid = /Android/i.test(navigator.userAgent);
-
 // On Android/Chrome, don’t trust a previously-cached deviceId (can “stick” to ultra-wide)
 let deviceId = (isAndroid ? null : preferredDeviceId);
 
