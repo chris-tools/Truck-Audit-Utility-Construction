@@ -740,24 +740,11 @@ function formatExcelDateCell(v) {
     return score;
   }
 
-  async function pickBestRearCameraDeviceId(devices){
+    async function pickBestRearCameraDeviceId(devices){
+    // Goal: pick the MAIN/WIDE rear camera (avoid ultra-wide + tele).
     const cams = (devices || []).filter(d => d && d.deviceId);
 
-    // If we have labels, pick by label first (fast, avoids tele/ultra-wide).
-    const anyLabels = cams.some(d => (d.label || '').trim().length > 0);
-    if (anyLabels){
-      const sorted = cams
-        .map(d => ({ id: d.deviceId, score: labelScore(d.label), label: d.label }))
-        .sort((a,b) => b.score - a.score);
-
-      // If the best label looks reasonable, use it.
-      if (sorted.length && sorted[0].score > -999){
-        return sorted[0].id;
-      }
-    }
-
-    // Fallback: capability probe (kept conservative to avoid telephoto bias).
-    // We’ll still try rear-ish labels if present, otherwise try all.
+    // Prefer rear-ish labels if available, otherwise try all.
     const rearCandidates = cams.filter(d => /back|rear|environment/i.test(d.label || ''));
     const pool = rearCandidates.length ? rearCandidates : cams;
 
@@ -781,16 +768,34 @@ function formatExcelDateCell(v) {
         const caps = track.getCapabilities ? track.getCapabilities() : {};
         const settings = track.getSettings ? track.getSettings() : {};
 
+        const area = (settings.width || 0) * (settings.height || 0);
+
         const zoomMax =
           (caps.zoom && typeof caps.zoom.max === 'number') ? caps.zoom.max : 1;
 
-        const area = (settings.width || 0) * (settings.height || 0);
+        const focusModes = Array.isArray(caps.focusMode) ? caps.focusMode : [];
+        const hasContinuousAF = focusModes.includes('continuous');
+        const hasFocusDistance = !!caps.focusDistance;
 
-        // “Good for scanning” heuristic:
-        // - Penalize very high zoomMax (often tele lenses)
-        // - Prefer moderate zoom capability + decent resolution
-        const zoomPenalty = zoomMax > 6 ? 500000 : 0;
-        const score = (area) + (Math.min(zoomMax, 4) * 20000) - zoomPenalty;
+        // Scoring:
+        // - Strongly prefer cameras that support continuous autofocus (usually main lens)
+        // - Prefer moderate zoom range (main lens often reports >1 and <~6)
+        // - Penalize zoomMax ~= 1 (often ultra-wide) and zoomMax very high (often tele)
+        let score = 0;
+
+        score += area; // resolution helps, but not the main driver
+
+        if(hasContinuousAF) score += 2_000_000;
+        if(hasFocusDistance) score += 500_000;
+
+        // Prefer zoomMax in a “main lens” band
+        if(zoomMax >= 2 && zoomMax <= 6) score += 1_000_000;
+
+        // Penalize likely ultra-wide
+        if(zoomMax <= 1.1) score -= 2_000_000;
+
+        // Penalize likely telephoto
+        if(zoomMax >= 7) score -= 1_500_000;
 
         if(!best || score > best.score){
           best = { deviceId: cam.deviceId, score };
@@ -811,8 +816,11 @@ function formatExcelDateCell(v) {
     await ensureVideoPermissionOnce();
     const devices = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
 
-   // Prefer the best rear camera (helps Samsung/Chrome avoid the ultra-wide lens)
-let deviceId = preferredDeviceId;
+// Prefer the best rear camera (helps Samsung/Chrome avoid the ultra-wide lens)
+const isAndroid = /Android/i.test(navigator.userAgent);
+
+// On Android/Chrome, don’t trust a previously-cached deviceId (can “stick” to ultra-wide)
+let deviceId = (isAndroid ? null : preferredDeviceId);
 
 if(!deviceId){
   deviceId = await pickBestRearCameraDeviceId(devices);
