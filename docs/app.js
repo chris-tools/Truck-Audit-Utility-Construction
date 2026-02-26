@@ -707,59 +707,108 @@ function formatExcelDateCell(v) {
   }
 });
 
-  async function pickBestRearCameraDeviceId(devices){
-  // Tries rear-ish cameras and picks the one with the best zoom capability (or best resolution fallback).
-  // This helps Samsung/Chrome avoid choosing the ultra-wide lens.
-  const cams = (devices || []).filter(d => d && d.deviceId);
-
-  // Prefer anything that looks like a rear camera by label; fallback to all cams.
-  const rearCandidates = cams.filter(d => /back|rear|environment/i.test(d.label || ''));
-  const pool = rearCandidates.length ? rearCandidates : cams;
-
-  let best = null;
-
-  for(const cam of pool){
-    let stream = null;
+    async function ensureVideoPermissionOnce(){
+    // Chrome often hides device labels until the user grants camera permission at least once.
     try{
-      stream = await navigator.mediaDevices.getUserMedia({
+      const tmp = await navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: {
-          deviceId: { exact: cam.deviceId },
-          width:  { ideal: 1920 },
-          height: { ideal: 1080 }
-        }
+        video: { facingMode: { ideal: 'environment' } }
       });
-
-      const track = stream.getVideoTracks?.()[0];
-      if(!track) continue;
-
-      const caps = track.getCapabilities ? track.getCapabilities() : {};
-      const settings = track.getSettings ? track.getSettings() : {};
-
-      const zoomMax =
-        (caps.zoom && typeof caps.zoom.max === 'number') ? caps.zoom.max : 1;
-
-      const area = (settings.width || 0) * (settings.height || 0);
-
-      // Score: zoom dominates; resolution breaks ties.
-      const score = (zoomMax * 1_000_000) + area;
-
-      if(!best || score > best.score){
-        best = { deviceId: cam.deviceId, score };
-      }
+      tmp.getTracks().forEach(t => t.stop());
     }catch(_){
-      // ignore and try next
-    }finally{
-      if(stream){
-        try{ stream.getTracks().forEach(t => t.stop()); }catch(_){}
-      }
+      // If user denies, we can’t do much; scanning will fail anyway.
     }
   }
 
-  return best ? best.deviceId : (pool[pool.length - 1]?.deviceId || null);
-}
+  function labelScore(label){
+    const s = String(label || '').toLowerCase();
+
+    // Strongly prefer the “main / wide” rear lens.
+    let score = 0;
+
+    if (/(back|rear|environment)/.test(s)) score += 50;
+
+    // Prefer "wide" / "main"
+    if (/\bwide\b/.test(s)) score += 40;
+    if (/\bmain\b/.test(s)) score += 35;
+
+    // Avoid lenses that are usually bad for close barcode scanning
+    if (/ultra/.test(s)) score -= 80;   // ultra-wide = soft up close
+    if (/tele/.test(s)) score -= 60;    // telephoto = needs distance
+    if (/zoom/.test(s)) score -= 20;
+
+    return score;
+  }
+
+  async function pickBestRearCameraDeviceId(devices){
+    const cams = (devices || []).filter(d => d && d.deviceId);
+
+    // If we have labels, pick by label first (fast, avoids tele/ultra-wide).
+    const anyLabels = cams.some(d => (d.label || '').trim().length > 0);
+    if (anyLabels){
+      const sorted = cams
+        .map(d => ({ id: d.deviceId, score: labelScore(d.label), label: d.label }))
+        .sort((a,b) => b.score - a.score);
+
+      // If the best label looks reasonable, use it.
+      if (sorted.length && sorted[0].score > -999){
+        return sorted[0].id;
+      }
+    }
+
+    // Fallback: capability probe (kept conservative to avoid telephoto bias).
+    // We’ll still try rear-ish labels if present, otherwise try all.
+    const rearCandidates = cams.filter(d => /back|rear|environment/i.test(d.label || ''));
+    const pool = rearCandidates.length ? rearCandidates : cams;
+
+    let best = null;
+
+    for(const cam of pool){
+      let stream = null;
+      try{
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            deviceId: { exact: cam.deviceId },
+            width:  { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        });
+
+        const track = stream.getVideoTracks?.()[0];
+        if(!track) continue;
+
+        const caps = track.getCapabilities ? track.getCapabilities() : {};
+        const settings = track.getSettings ? track.getSettings() : {};
+
+        const zoomMax =
+          (caps.zoom && typeof caps.zoom.max === 'number') ? caps.zoom.max : 1;
+
+        const area = (settings.width || 0) * (settings.height || 0);
+
+        // “Good for scanning” heuristic:
+        // - Penalize very high zoomMax (often tele lenses)
+        // - Prefer moderate zoom capability + decent resolution
+        const zoomPenalty = zoomMax > 6 ? 500000 : 0;
+        const score = (area) + (Math.min(zoomMax, 4) * 20000) - zoomPenalty;
+
+        if(!best || score > best.score){
+          best = { deviceId: cam.deviceId, score };
+        }
+      }catch(_){
+        // ignore and try next
+      }finally{
+        if(stream){
+          try{ stream.getTracks().forEach(t => t.stop()); }catch(_){}
+        }
+      }
+    }
+
+    return best ? best.deviceId : (pool[pool.length - 1]?.deviceId || null);
+  }
   
   async function startCamera(){
+    await ensureVideoPermissionOnce();
     const devices = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
 
    // Prefer the best rear camera (helps Samsung/Chrome avoid the ultra-wide lens)
