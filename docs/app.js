@@ -812,9 +812,11 @@ function formatExcelDateCell(v) {
     return best ? best.deviceId : (pool[pool.length - 1]?.deviceId || null);
   }
   
-  async function startCamera(){
-    await ensureVideoPermissionOnce();
-    const devices = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
+ async function startCamera(){
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
+  await ensureVideoPermissionOnce();
+  const devices = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
 
 // On Android/Chrome, don’t trust a previously-cached deviceId (can “stick” to ultra-wide)
 let deviceId = (isAndroid ? null : preferredDeviceId);
@@ -827,9 +829,6 @@ preferredDeviceId = deviceId || null;
 
    scanner = new ZXingBrowser.BrowserMultiFormatReader();
   
-    // Ask for a sharper video feed (helps tiny 2D codes a LOT)
-const isAndroid = /Android/i.test(navigator.userAgent);
-
 const constraints = {
   audio: false,
   video: {
@@ -892,9 +891,7 @@ cleaned = cleaned.replace(/#/g, '');
       if(stream){
         streamTrack = stream.getVideoTracks()[0];
         const caps = streamTrack.getCapabilities ? streamTrack.getCapabilities() : {};
-        // --- Android focus nudge (Samsung fix) ---
-const isAndroid = /Android/i.test(navigator.userAgent);
-
+      
 if (isAndroid && streamTrack && streamTrack.applyConstraints) {
   try {
     const adv = [];
@@ -928,7 +925,6 @@ if(zoomSupported){
   const minZ = Number(caps.zoom.min ?? 1);
   const maxZ = Number(caps.zoom.max ?? 1);
 
-  const isAndroid = /Android/i.test(navigator.userAgent);
   const desired = isAndroid ? 1.25 : 2;
 
   const target = Math.min(maxZ, Math.max(minZ, desired));
