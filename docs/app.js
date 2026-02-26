@@ -707,18 +707,69 @@ function formatExcelDateCell(v) {
   }
 });
 
+  async function pickBestRearCameraDeviceId(devices){
+  // Tries rear-ish cameras and picks the one with the best zoom capability (or best resolution fallback).
+  // This helps Samsung/Chrome avoid choosing the ultra-wide lens.
+  const cams = (devices || []).filter(d => d && d.deviceId);
+
+  // Prefer anything that looks like a rear camera by label; fallback to all cams.
+  const rearCandidates = cams.filter(d => /back|rear|environment/i.test(d.label || ''));
+  const pool = rearCandidates.length ? rearCandidates : cams;
+
+  let best = null;
+
+  for(const cam of pool){
+    let stream = null;
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          deviceId: { exact: cam.deviceId },
+          width:  { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      });
+
+      const track = stream.getVideoTracks?.()[0];
+      if(!track) continue;
+
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      const settings = track.getSettings ? track.getSettings() : {};
+
+      const zoomMax =
+        (caps.zoom && typeof caps.zoom.max === 'number') ? caps.zoom.max : 1;
+
+      const area = (settings.width || 0) * (settings.height || 0);
+
+      // Score: zoom dominates; resolution breaks ties.
+      const score = (zoomMax * 1_000_000) + area;
+
+      if(!best || score > best.score){
+        best = { deviceId: cam.deviceId, score };
+      }
+    }catch(_){
+      // ignore and try next
+    }finally{
+      if(stream){
+        try{ stream.getTracks().forEach(t => t.stop()); }catch(_){}
+      }
+    }
+  }
+
+  return best ? best.deviceId : (pool[pool.length - 1]?.deviceId || null);
+}
+  
   async function startCamera(){
     const devices = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
 
-    // Prefer the rear camera. On iOS, device labels may be empty until permission is granted;
-    // in that case, the "environment" camera is often the *last* entry.
-    let deviceId = preferredDeviceId;
-    if(!deviceId){
-      const byLabel = (devices || []).find(d=>/back|rear|environment/i.test(d.label||''));
-      if(byLabel) deviceId = byLabel.deviceId;
-      else if(devices && devices.length) deviceId = devices[devices.length - 1].deviceId;
-    }
-    preferredDeviceId = deviceId || null;
+   // Prefer the best rear camera (helps Samsung/Chrome avoid the ultra-wide lens)
+let deviceId = preferredDeviceId;
+
+if(!deviceId){
+  deviceId = await pickBestRearCameraDeviceId(devices);
+}
+
+preferredDeviceId = deviceId || null;
 
    scanner = new ZXingBrowser.BrowserMultiFormatReader();
   
@@ -732,8 +783,8 @@ const constraints = {
     facingMode: deviceId ? undefined : { ideal: 'environment' },
 
     // Samsung focus stability
-    width:  { ideal: 1280 },
-    height: { ideal: 720 },
+    width:  { ideal: 1920 },
+    height: { ideal: 1080 },
     frameRate: { ideal: 30, max: 30 }
   }
 };
