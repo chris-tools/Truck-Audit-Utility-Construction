@@ -879,7 +879,7 @@ cleaned = cleaned.replace(/#/g, '');
 
     // Keep the camera running for speed (don’t stop/restart between items)
   startScan.disabled = false;
-  startScan.textContent = 'Scan Next';
+  startScan.textContent = 'Tap to Confirm';
   stopScan.disabled = !pendingScanText;
   setBanner('ok', 'Scan captured — tap Scan Next to commit');
   });
@@ -1024,7 +1024,7 @@ armDelayId = setTimeout(()=>{
 
     // Keep the camera running (faster retries)
     startScan.disabled = false;
-    startScan.textContent = hasScannedOnce ? 'Scan Next' : 'Scan';
+    startScan.textContent = hasScannedOnce ? 'Tap to Confirm' : 'Scan';
     stopScan.disabled = false; // keep Finished available
     setBanner('warn', 'Timed out — tap Scan Next to try again');
     
