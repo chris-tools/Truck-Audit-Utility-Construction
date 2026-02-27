@@ -877,11 +877,11 @@ cleaned = cleaned.replace(/#/g, '');
   scanSuccessSound();
   setPendingScan(cleaned);
 
-  stopCamera().then(()=>{
-    startScan.disabled = false;
-    startScan.textContent = 'Scan Next';
-    stopScan.disabled = !pendingScanText;
-    setBanner('ok', 'Scan captured — tap Scan Next to commit');
+    // Keep the camera running for speed (don’t stop/restart between items)
+  startScan.disabled = false;
+  startScan.textContent = 'Scan Next';
+  stopScan.disabled = !pendingScanText;
+  setBanner('ok', 'Scan captured — tap Scan Next to commit');
   });
 });
 
@@ -1021,11 +1021,11 @@ armDelayId = setTimeout(()=>{
   armTimeoutId = setTimeout(()=>{
     if(!armed) return;
     armed = false;
-    stopCamera().then(()=>{
-      startScan.disabled = false;
-      startScan.textContent = hasScannedOnce ? 'Scan Next' : 'Scan';
-      stopScan.disabled = true;
-      setBanner('warn', 'Timed out — tap Scan Next to try again');
+        // Keep the camera running (faster retries)
+    startScan.disabled = false;
+    startScan.textContent = hasScannedOnce ? 'Scan Next' : 'Scan';
+    stopScan.disabled = false; // keep Finished available
+    setBanner('warn', 'Timed out — tap Scan Next to try again');
     });
   }, 30000);
 
