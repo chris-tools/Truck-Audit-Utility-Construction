@@ -883,7 +883,6 @@ cleaned = cleaned.replace(/#/g, '');
   stopScan.disabled = !pendingScanText;
   setBanner('ok', 'Scan captured — tap Scan Next to commit');
   });
-});
 
     try{
       const stream = video.srcObject;
