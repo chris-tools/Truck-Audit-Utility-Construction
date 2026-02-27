@@ -1018,17 +1018,19 @@ armDelayId = setTimeout(()=>{
   if(armDelayId){ clearTimeout(armDelayId); armDelayId = null; }
 
   // Timeout starts AFTER we arm
+  // Timeout starts AFTER we arm
   armTimeoutId = setTimeout(()=>{
     if(!armed) return;
     armed = false;
-        // Keep the camera running (faster retries)
+
+    // Keep the camera running (faster retries)
     startScan.disabled = false;
     startScan.textContent = hasScannedOnce ? 'Scan Next' : 'Scan';
     stopScan.disabled = false; // keep Finished available
     setBanner('warn', 'Timed out — tap Scan Next to try again');
-    });
+    
   }, 30000);
-
+  
 }, 450);
 
     }catch(e){
