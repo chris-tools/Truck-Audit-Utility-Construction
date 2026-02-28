@@ -543,3 +543,14 @@ main.container{
   margin-top: 18px;
   opacity: 0.9;
 }
+/* ===== Scan Button Confirm State (Yellow Hold) ===== */
+#startScan.confirmPending{
+  background: #f2c200;
+  border-color: #d3a800;
+  color: #0b2a6f;   /* matches your brand blue text */
+  transform: scale(1.04);
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
