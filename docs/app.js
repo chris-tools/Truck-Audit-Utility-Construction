@@ -1127,6 +1127,16 @@ const lastScannedValueEl = document.getElementById('lastScannedValue');
 const dismissLastScannedBtn = document.getElementById('dismissLastScanned');
 const lastScannedCheckEl = document.getElementById('lastScannedCheck');
 
+  function setScanConfirmVisualState(isConfirmPending){
+  if(!startScan) return;
+
+  // Only show the yellow "confirm" state when the button is actually actionable
+  if(isConfirmPending && !startScan.disabled){
+    startScan.classList.add('confirmPending');
+  }else{
+    startScan.classList.remove('confirmPending');
+  }
+}
 
 function renderLastScannedUI(){
   if(!lastScannedValueEl || !dismissLastScannedBtn) return;
@@ -1145,6 +1155,7 @@ function renderLastScannedUI(){
     // (your existing scan start/stop logic will also control this)
     if(stopScan && !armed) stopScan.disabled = true;
   }
+  setScanConfirmVisualState(!!pendingScanText);
 }
 
 function setPendingScan(text){
