@@ -875,13 +875,14 @@ cleaned = cleaned.replace(/#/g, '');
   }
 
   scanSuccessSound();
-  setPendingScan(cleaned);
 
-    // Keep the camera running for speed (don’t stop/restart between items)
-  startScan.disabled = false;
-  startScan.textContent = 'Tap to Confirm';
-  stopScan.disabled = !pendingScanText;
-  setBanner('ok', 'Scan captured — tap Scan Next to commit');
+// Keep the camera running for speed (don’t stop/restart between items)
+startScan.disabled = false;
+startScan.textContent = 'Tap to Confirm';
+
+setPendingScan(cleaned);          // <-- moved here
+
+stopScan.disabled = false;        // (since we now definitely have a pending scan)
   });
 
     try{
