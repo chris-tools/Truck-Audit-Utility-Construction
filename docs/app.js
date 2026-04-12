@@ -362,14 +362,13 @@ if(copyAllMissing) copyAllMissing.disabled = true;
   }
 }
 
-  function updateModeButtonsState() {
+ function updateModeButtonsState() {
   const hasTech = techNameField && techNameField.value.trim().length > 0;
   const hasContractor = contractorField && contractorField.value.trim().length > 0;
 
   const canChooseMode = hasTech && hasContractor;
 
   if (modeAuditBtn) modeAuditBtn.disabled = !canChooseMode;
-  if (modeQuickBtn) modeQuickBtn.disabled = !canChooseMode;
 }
 
   // Export button
