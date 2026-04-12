@@ -300,14 +300,14 @@ function isCenteredDecode(result, videoEl, tolerance = 0.22){
 
     if (copyAllScanned) copyAllScanned.disabled = scanned.size === 0;
 
-    if(mode === 'audit'){
-      regenerateMissingQueue();
-      copyNextMissing.disabled = missingQueue.length === 0;
-      if(copyAllMissing) copyAllMissing.disabled = missingQueue.length === 0;
-   } else {
-  copyNextMissing.disabled = true;
-  if(copyAllMissing) copyAllMissing.disabled = true;
-}
+const hasTech = techNameField && techNameField.value.trim().length > 0;
+const hasContractor = contractorField && contractorField.value.trim().length > 0;
+
+// Enable copy button when required fields are filled
+copyNextMissing.disabled = !(hasTech && hasContractor);
+
+// Keep this disabled (we're phasing it out anyway)
+if(copyAllMissing) copyAllMissing.disabled = true;
 
     const scannedArr = Array.from(scanned).sort();
     const extraArr = Array.from(extras).sort();
