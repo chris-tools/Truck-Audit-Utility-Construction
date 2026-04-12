@@ -2,7 +2,6 @@
   const $ = (id)=>document.getElementById(id);
 
   const modeAuditBtn = $('modeAuditBtn');
-  const modeQuickBtn = $('modeQuickBtn');
   const auditSection = $('auditSection');
   const scanSection = $('scanSection');
   const excelFile = $('excelFile');
