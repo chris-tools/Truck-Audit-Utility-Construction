@@ -637,6 +637,7 @@ function formatExcelDateCell(v) {
 
     setBanner('ok', 'CSV loaded');
     regenerateMissingQueue();
+    scanSection.hidden = false;
     updateUI();
     updateExportButtonState();
   } catch(e){
@@ -1545,7 +1546,7 @@ if ('serviceWorker' in navigator) {
 
 // Auto-start in Audit mode
 auditSection.hidden = false;
-scanSection.hidden = false;
+scanSection.hidden = true; // hide scan until inventory is loaded
 
 expectedSummary.textContent = 'Upload the Excel you were emailed. Then scan everything on the truck.';
 
