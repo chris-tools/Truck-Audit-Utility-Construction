@@ -376,8 +376,6 @@ if(copyAllMissing) copyAllMissing.disabled = true;
   // Export button
 function updateExportButtonState() {
   const exportAuditBtn = document.getElementById('exportCsv');
-  const exportFullBtn  = document.getElementById('exportFullCsv');
-
   const hasExpected = expected && expected.size > 0;
   const hasScans = scanned && scanned.size > 0;
 
@@ -386,14 +384,10 @@ function updateExportButtonState() {
 
   // Export Audit Results (your existing audit export)
   // Keep this strict: audit mode + excel + tech + contractor
-  const canExportAudit = (mode === 'audit' && hasExpected && hasTech && hasContractor);
-
-  // Export Full Report (Reference)
   // Works if tech+contractor AND (excel imported OR at least one scan)
   const canExportFull = (hasTech && hasContractor && (hasExpected || hasScans));
 
   if (exportAuditBtn) exportAuditBtn.disabled = !canExportAudit;
-  if (exportFullBtn)  exportFullBtn.disabled  = !canExportFull;
 }
 
 
