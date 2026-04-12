@@ -380,11 +380,7 @@ function updateExportButtonState() {
 
   const hasTech = techNameField && techNameField.value.trim().length > 0;
   const hasContractor = contractorField && contractorField.value.trim().length > 0;
-
-  // Export Audit Results (your existing audit export)
-  // Keep this strict: audit mode + excel + tech + contractor
-  // Works if tech+contractor AND (excel imported OR at least one scan)
-  const canExportFull = (hasTech && hasContractor && (hasExpected || hasScans));
+  const canExportAudit = (hasExpected && hasTech && hasContractor);
 
   if (exportAuditBtn) exportAuditBtn.disabled = !canExportAudit;
 }
