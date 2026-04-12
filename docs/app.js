@@ -5,6 +5,7 @@
   const auditSection = $('auditSection');
   const scanSection = $('scanSection');
   const excelFile = $('excelFile');
+  const fileBtn = $('fileBtn');
   const fileMeta = $('fileMeta');
   const colPicker = $('colPicker');
   const serialCol = $('serialCol');
