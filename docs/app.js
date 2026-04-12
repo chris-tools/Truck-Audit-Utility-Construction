@@ -559,16 +559,6 @@ async function parseCsv(file){
     handledMissing = new Set(); // reset handled when inventory reloads
   }
 
-  modeAuditBtn.addEventListener('click', ()=>{
-    mode = 'audit';
-    resetSession();
-    auditSection.hidden = false;
-    scanSection.hidden = false;
-    expectedSummary.textContent = 'Upload the Excel you were emailed. Then scan everything on the truck.';
-    setBanner('ok', 'Audit mode ready');
-    updateUI();
-  });
-
  // ===== Excel date normalization helper =====
 function formatExcelDateCell(v) {
   if (v === null || v === undefined) return '';
@@ -1551,11 +1541,14 @@ if ('serviceWorker' in navigator) {
   }
 }
 
-  setBanner('ok', 'Choose a mode to begin');
-  setIdleBanner();
-  banner.className = 'banner';
-  banner.textContent = IDLE_BANNER_TEXT;
-  updateUI();
+// Auto-start in Audit mode
+auditSection.hidden = false;
+scanSection.hidden = false;
+
+expectedSummary.textContent = 'Upload the Excel you were emailed. Then scan everything on the truck.';
+
+setIdleBanner();
+updateUI();
 
 /* Reload warning dismiss */
 const reloadWarning = document.getElementById('reloadWarning');
