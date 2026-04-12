@@ -636,6 +636,7 @@ function formatExcelDateCell(v) {
   `Inventory loaded. Expected serials: ${expected.size}.`;
 
     setBanner('ok', 'CSV loaded');
+    regenerateMissingQueue();
     updateUI();
     updateExportButtonState();
   } catch(e){
@@ -671,8 +672,9 @@ function formatExcelDateCell(v) {
   expectedSummary.textContent =
   `Inventory loaded. Expected serials: ${expected.size}.`;
 
-    updateUI();
-    updateExportButtonState();
+  regenerateMissingQueue();
+  updateUI();
+  updateExportButtonState();
   } catch(e){
     expectedSummary.textContent = 'Could not read Excel: ' + e.message;
   }
