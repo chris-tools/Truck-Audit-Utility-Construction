@@ -574,15 +574,7 @@ async function parseCsv(file){
     updateUI();
   });
 
-  modeQuickBtn.addEventListener('click', ()=>{
-    mode = 'quick';
-    resetSession();
-    auditSection.hidden = true;
-    scanSection.hidden = false;
-    setBanner('ok', 'Quick Scan mode ready');
-    updateUI();
-  });
-// ===== Excel date normalization helper =====
+ // ===== Excel date normalization helper =====
 function formatExcelDateCell(v) {
   if (v === null || v === undefined) return '';
 
