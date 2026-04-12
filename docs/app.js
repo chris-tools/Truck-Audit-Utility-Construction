@@ -41,7 +41,7 @@
   const extraCount = $('extraCount');
 
 
-  let mode = null; // 'audit' | 'quick'
+  let mode = 'audit';
   let expected = new Map(); // serial -> {part}
   let scanned = new Set();  // unique
   let extras = new Set();
