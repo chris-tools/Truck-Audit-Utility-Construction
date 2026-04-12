@@ -30,6 +30,7 @@
   const addManual = $('addManual');
 
   const copyNextMissing = $('copyNextMissing');
+  const TAU_EMAIL = 'chris.gagnon@fidium.com';
   const copyAllMissing = $('copyAllMissing');
   const copyAllScanned = $('copyAllScanned');
 
@@ -1113,14 +1114,9 @@ armDelayId = setTimeout(()=>{
 }
 
   copyNextMissing.addEventListener('click', ()=>{
-    if(mode !== 'audit') return;
-    regenerateMissingQueue();
-    if(missingQueue.length === 0) return;
-    const next = missingQueue[0];
-    handledMissing.add(next);
-    copyText(next);
-    updateUI();
-  });
+  copyText(TAU_EMAIL);
+  setBanner('ok', 'Email copied');
+});
   // ===== Last Scanned (pending commit) =====
 let pendingScanText = ''; // holds scan waiting to be committed
 
