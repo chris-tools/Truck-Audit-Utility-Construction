@@ -363,13 +363,22 @@ if(copyAllMissing) copyAllMissing.disabled = true;
   }
 }
 
- function updateModeButtonsState() {
+function updateModeButtonsState() {
   const hasTech = techNameField && techNameField.value.trim().length > 0;
   const hasContractor = contractorField && contractorField.value.trim().length > 0;
 
-  const canChooseMode = hasTech && hasContractor;
+  const canProceed = hasTech && hasContractor;
 
-  if (modeAuditBtn) modeAuditBtn.disabled = !canChooseMode;
+  if (modeAuditBtn) modeAuditBtn.disabled = !canProceed;
+
+  // NEW: control file button
+  if (fileBtn) {
+    fileBtn.classList.toggle('disabled', !canProceed);
+  }
+
+  if (excelFile) {
+    excelFile.disabled = !canProceed;
+  }
 }
 
   // Export button
