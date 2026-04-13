@@ -570,3 +570,7 @@ main.container{
     background-color 120ms ease,
     border-color 120ms ease;
 }
+button.copied {
+  background-color: #2e7d32 !important;
+  color: #fff !important;
+}
