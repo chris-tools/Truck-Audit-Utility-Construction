@@ -1096,9 +1096,20 @@ armDelayId = setTimeout(()=>{
   });
 }
 
-  copyNextMissing.addEventListener('click', ()=>{
+copyNextMissing.addEventListener('click', ()=>{
   copyText(TAU_EMAIL);
-  setBanner('ok', 'Email copied');
+
+  // Change button text
+  copyNextMissing.textContent = 'Copied ✓';
+
+  // Optional visual feedback (CSS class)
+  copyNextMissing.classList.add('copied');
+
+  // Revert after 1.5 seconds
+  setTimeout(() => {
+    copyNextMissing.textContent = 'Copy Email';
+    copyNextMissing.classList.remove('copied');
+  }, 1500);
 });
   // ===== Last Scanned (pending commit) =====
 let pendingScanText = ''; // holds scan waiting to be committed
