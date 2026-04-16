@@ -1258,14 +1258,14 @@ if (exportBtn) {
     // Auditor CSV columns:
     // Date, Technician Name, Contractor Name, Serial Number, Equipment Status, Notes
     const rows = [];
-    rows.push(['Date','Technician Name','Contractor Name or Garage','Serial Number','Equipment Status','Notes']);
+    rows.push(['Notes (Internal)','Date','Technician Name','Contractor Name or Garage','Serial Number','Equipment Status','Notes']);
 
     const tech = techName.trim();
     const contractor = contractorName.trim();
 
     // Missing-only export; status intentionally set to Installed
     for (const s of missingQueue) {
-      rows.push([auditDate, tech, contractor, s, 'Installed', '']);
+      rows.push(['', auditDate, tech, contractor, s, 'Installed', '']);
     }
 
     // CSV encode
