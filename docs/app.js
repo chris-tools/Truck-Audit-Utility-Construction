@@ -1211,7 +1211,7 @@ const formattedDate =
 await navigator.share({
   files: [file],
   title: filename,
-  text: `Truck Audit Export – ${formattedDate}`,
+  text: `Truck Audit Export – ${formattedDate}\n\n#TAU_EXPORT#`,
 });
       return 'share';
     } catch (e) {
