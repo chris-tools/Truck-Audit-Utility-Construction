@@ -421,6 +421,7 @@ function updateExportButtonState() {
       setBanner('ok', 'Added: ' + s);
     }
 
+    regenerateMissingQueue();
     updateUI();
 
     updateExportButtonState();
