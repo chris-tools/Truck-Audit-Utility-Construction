@@ -1202,12 +1202,17 @@ async function shareOrDownloadCsv(csvText, filename) {
     try {
       const file = new File([blob], filename, { type: 'text/csv;charset=utf-8' });
 
-      await navigator.share({
-        files: [file],
-        title: filename,
-        text: 'TAU export',
-      });
+      const d = new Date();
+const formattedDate =
+  String(d.getMonth() + 1).padStart(2, '0') + '/' +
+  String(d.getDate()).padStart(2, '0') + '/' +
+  d.getFullYear();
 
+await navigator.share({
+  files: [file],
+  title: filename,
+  text: `Truck Audit Export – ${formattedDate}`,
+});
       return 'share';
     } catch (e) {
       // user cancel or iOS blocks → fall through to download
