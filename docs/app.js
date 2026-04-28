@@ -685,6 +685,7 @@ function formatExcelDateCell(v) {
   `Inventory loaded. Expected serials: ${expected.size}.`;
 
   regenerateMissingQueue();
+  scanSection.hidden = false;
   updateUI();
   updateExportButtonState();
   } catch(e){
